@@ -2,6 +2,8 @@ use std::io;
 use std::io::Write;
 use std::{env, fs, process::exit};
 
+pub mod logger;
+
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
