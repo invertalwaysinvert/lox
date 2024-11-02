@@ -3,6 +3,8 @@ use std::io::Write;
 use std::{env, fs, process::exit};
 
 pub mod logger;
+pub mod scanner;
+pub mod tokens;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -18,14 +20,18 @@ fn main() {
     }
 }
 
-fn run_file(file_path: &String) {
+fn run_file(file_path: &str) {
     match fs::read_to_string(file_path) {
         Ok(source) => run(source),
         Err(_) => exit(65), // Data-format error
     }
 }
 
-fn run(_source: String) {}
+fn run(source: String) {
+    let mut obj = scanner::Scanner::new(source);
+    let result = obj.scan_tokens();
+    dbg!(result);
+}
 
 fn run_prompt() {
     let mut input = String::new();
@@ -36,7 +42,7 @@ fn run_prompt() {
         match io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                println! {"{input}"};
+                println!("{input}");
                 input.clear();
             }
             Err(_) => exit(74), // Input/output error
