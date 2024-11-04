@@ -5,16 +5,16 @@ use crate::{
     tokens::{Token, TokenLiteral, TokenType},
 };
 
-pub struct Scanner {
-    source: String,
+pub struct Scanner<'a> {
+    source: &'a str,
     tokens: Vec<Token>,
     current: usize,
     start: usize,
     line: usize,
 }
 
-impl Scanner {
-    pub fn new(source: String) -> Self {
+impl<'a> Scanner<'a> {
+    pub fn new(source: &'a str) -> Self {
         Scanner {
             source,
             tokens: Vec::new(),

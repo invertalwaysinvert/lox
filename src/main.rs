@@ -22,13 +22,13 @@ fn main() {
 
 fn run_file(file_path: &str) {
     match fs::read_to_string(file_path) {
-        Ok(source) => run(source),
+        Ok(source) => run(&source),
         Err(_) => exit(65), // Data-format error
     }
 }
 
-fn run(source: String) {
-    let mut obj = scanner::Scanner::new(source);
+fn run(source: &str) {
+    let mut obj = scanner::Scanner::new(&source);
     let result = obj.scan_tokens();
     dbg!(result);
 }
@@ -42,7 +42,7 @@ fn run_prompt() {
         match io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                dbg!(run(input.clone()));
+                dbg!(run(&input));
                 input.clear();
             }
             Err(_) => exit(74), // Input/output error
