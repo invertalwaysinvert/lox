@@ -42,7 +42,7 @@ fn run_prompt() {
         match io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                println!("{input}");
+                dbg!(run(input.clone()));
                 input.clear();
             }
             Err(_) => exit(74), // Input/output error
