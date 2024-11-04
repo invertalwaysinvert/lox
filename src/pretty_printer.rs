@@ -1,5 +1,5 @@
 use crate::{
-    expressions::{BinaryExpr, Expr, Visitor, VisitorAcceptor},
+    expressions::{BinaryExpr, Visitor, VisitorAcceptor},
     tokens::TokenLiteral,
 };
 
@@ -10,7 +10,7 @@ impl PrettyPrinter {
         let mut result = format!("( {name} ");
         for expr in exprs {
             result.push_str(expr);
-            result.push_str(" ")
+            result.push(' ')
         }
         result.push(')');
         result
@@ -53,25 +53,33 @@ impl Visitor<String> for PrettyPrinter {
 #[cfg(test)]
 mod test {
     use crate::{
-        expressions::{BinaryExpr, Expr, LiteralExpr},
+        expressions::{BinaryExpr, Expr, GroupingExpr, LiteralExpr},
         tokens::{Token, TokenLiteral, TokenType},
     };
 
     use super::PrettyPrinter;
 
     #[test]
-    fn test_sandbox() {
+    fn test_binary_expression() {
         let printer = PrettyPrinter {};
         let output = printer.print(BinaryExpr::new(
             Expr::Literal(LiteralExpr::new(TokenLiteral::String("abc".to_string()))),
-            Token {
-                token_type: TokenType::Star,
-                lexeme: "*".to_string(),
-                literal: TokenLiteral::None,
-                line: 1,
-            },
+            Token::new(TokenType::Star, "*".to_string(), TokenLiteral::None, 1),
             Expr::Literal(LiteralExpr::new(TokenLiteral::String("xyz".to_string()))),
         ));
-        assert_eq!(output, "( + abc xyz)");
+        assert_eq!(output, "( * abc xyz )");
+    }
+
+    #[test]
+    fn test_binary_expression_full() {
+        let printer = PrettyPrinter {};
+        let output = printer.print(BinaryExpr::new(
+            Expr::Literal(LiteralExpr::new(TokenLiteral::String("abc".to_string()))),
+            Token::new(TokenType::Star, "*".to_string(), TokenLiteral::None, 1),
+            Expr::Grouping(GroupingExpr::new(Expr::Literal(LiteralExpr::new(
+                TokenLiteral::String("xyz".to_string()),
+            )))),
+        ));
+        assert_eq!(output, "( * abc ( group xyz ) )");
     }
 }

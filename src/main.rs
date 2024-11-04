@@ -4,6 +4,7 @@ use std::{env, fs, process::exit};
 
 pub mod expressions;
 pub mod logger;
+pub mod parser;
 pub mod pretty_printer;
 pub mod scanner;
 pub mod tokens;
@@ -30,9 +31,12 @@ fn run_file(file_path: &str) {
 }
 
 fn run(source: &str) {
-    let mut obj = scanner::Scanner::new(&source);
+    let mut obj = scanner::Scanner::new(source);
     let result = obj.scan_tokens();
-    dbg!(result);
+    dbg!(&result);
+    let mut pars = parser::Parser::new(result);
+    let result = pars.parse();
+    dbg!(&result);
 }
 
 fn run_prompt() {

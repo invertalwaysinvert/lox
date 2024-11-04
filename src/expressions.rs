@@ -13,7 +13,7 @@ pub trait VisitorAcceptor<T> {
     fn accept(&self, visitor: impl Visitor<T>) -> T;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     Binary(BinaryExpr),
     Grouping(GroupingExpr),
@@ -25,12 +25,13 @@ impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Expr::Literal(x) => write!(f, "{}", x.value),
+            Expr::Grouping(x) => write!(f, "( group {} )", x.expression),
             _ => write!(f, ""),
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BinaryExpr {
     pub left: Box<Expr>,
     pub operator: Token,
@@ -53,7 +54,7 @@ impl<T> VisitorAcceptor<T> for BinaryExpr {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GroupingExpr {
     pub expression: Box<Expr>,
 }
@@ -72,7 +73,7 @@ impl<T> VisitorAcceptor<T> for GroupingExpr {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LiteralExpr {
     pub value: TokenLiteral,
 }
@@ -89,7 +90,7 @@ impl<T> VisitorAcceptor<T> for LiteralExpr {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UnaryExpr {
     pub right: Box<Expr>,
     pub operator: Token,
