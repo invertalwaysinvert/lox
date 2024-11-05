@@ -3,11 +3,13 @@ use std::io::Write;
 use std::{env, fs, process::exit};
 
 pub mod expressions;
+pub mod interpreter;
 pub mod logger;
 pub mod parser;
 pub mod pretty_printer;
 pub mod scanner;
 pub mod tokens;
+pub mod types;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -37,6 +39,8 @@ fn run(source: &str) {
     let mut pars = parser::Parser::new(result);
     let result = pars.parse();
     dbg!(&result);
+    let mut intr = interpreter::Interpreter::new();
+    let result = intr.interpret(result.unwrap());
 }
 
 fn run_prompt() {

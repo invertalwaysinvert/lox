@@ -21,28 +21,28 @@ impl PrettyPrinter
 where
     PrettyPrinter: Visitor<String>,
 {
-    fn print<A: VisitorAcceptor<String>>(self, expr: A) -> String {
+    fn print<A: VisitorAcceptor<String, String>>(&self, expr: A) -> String {
         expr.accept(self)
     }
 }
 
 impl Visitor<String> for PrettyPrinter {
-    fn visit_binary_expr(self, expr: BinaryExpr) -> String {
+    fn visit_binary_expr(&self, expr: BinaryExpr) -> String {
         PrettyPrinter::paranthesize(
             &expr.operator.lexeme,
             vec![&expr.left.to_string(), &expr.right.to_string()],
         )
     }
 
-    fn visit_grouping_expr(self, expr: crate::expressions::GroupingExpr) -> String {
+    fn visit_grouping_expr(&self, expr: crate::expressions::GroupingExpr) -> String {
         PrettyPrinter::paranthesize("group", vec![&expr.expression.to_string()])
     }
 
-    fn visit_unary_expr(self, expr: crate::expressions::UnaryExpr) -> String {
+    fn visit_unary_expr(&self, expr: crate::expressions::UnaryExpr) -> String {
         PrettyPrinter::paranthesize(&expr.operator.lexeme, vec![&expr.right.to_string()])
     }
 
-    fn visit_literal_expr(self, expr: crate::expressions::LiteralExpr) -> String {
+    fn visit_literal_expr(&self, expr: crate::expressions::LiteralExpr) -> String {
         match expr.value {
             TokenLiteral::None => "nil".to_string(),
             x => x.to_string(),

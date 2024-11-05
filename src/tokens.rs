@@ -1,4 +1,7 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    ops::{Add, Div, Mul, Sub},
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -19,12 +22,61 @@ impl Token {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+impl Display for Token {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} {} {}", self.token_type, self.lexeme, self.literal)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum TokenLiteral {
     String(String),
     Number(f32),
     Bool(bool),
     None,
+}
+
+impl Add for TokenLiteral {
+    type Output = TokenLiteral;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x + y),
+            (TokenLiteral::String(x), TokenLiteral::String(y)) => TokenLiteral::String(x + &y),
+            _ => panic!(),
+        }
+    }
+}
+
+impl Sub for TokenLiteral {
+    type Output = TokenLiteral;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x - y),
+            _ => panic!(),
+        }
+    }
+}
+
+impl Mul for TokenLiteral {
+    type Output = TokenLiteral;
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x * y),
+            _ => panic!(),
+        }
+    }
+}
+
+impl Div for TokenLiteral {
+    type Output = TokenLiteral;
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x / y),
+            _ => panic!(),
+        }
+    }
 }
 
 impl Display for TokenLiteral {
@@ -33,12 +85,6 @@ impl Display for TokenLiteral {
             TokenLiteral::None => write!(f, ""),
             x => write!(f, "{}", x),
         }
-    }
-}
-
-impl Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} {} {}", self.token_type, self.lexeme, self.literal)
     }
 }
 
