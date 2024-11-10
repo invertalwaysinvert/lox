@@ -1,5 +1,5 @@
 use crate::{
-    expressions::{Expr, Visitor, VisitorAcceptor},
+    expressions::{Expr, LiteralExpr, Visitor, VisitorAcceptor},
     tokens::{TokenLiteral, TokenType},
 };
 
@@ -23,15 +23,16 @@ impl Interpreter
 where
     Interpreter: Visitor<TokenLiteral>,
 {
-    pub fn interpret(self, expression: Expr) {
-        let value = self.evaluate(expression);
-        dbg!(value);
+    pub fn interpret(self, expression: Expr) -> TokenLiteral {
+        match expression {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+        }
     }
 
-    pub fn evaluate<A: VisitorAcceptor<TokenLiteral, TokenLiteral>>(
-        &self,
-        expr: A,
-    ) -> TokenLiteral {
+    pub fn evaluate<A: VisitorAcceptor<TokenLiteral>>(&self, expr: A) -> TokenLiteral {
         expr.accept(self)
     }
 }
@@ -62,7 +63,7 @@ impl Visitor<TokenLiteral> for Interpreter {
             // Todo: Negate the bang
             TokenType::Bang => self.is_truthy(right),
             TokenType::Minus => match right {
-                TokenLiteral::Number(x) => TokenLiteral::Number(-1.0 * x),
+                TokenLiteral::Number(n) => TokenLiteral::Number(-1.0 * n),
                 _ => panic!(),
             },
             _ => panic!(),

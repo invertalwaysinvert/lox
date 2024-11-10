@@ -9,8 +9,8 @@ pub trait Visitor<T> {
     fn visit_unary_expr(&self, expr: UnaryExpr) -> T;
 }
 
-pub trait VisitorAcceptor<T, U> {
-    fn accept(&self, visitor: &impl Visitor<T>) -> U;
+pub trait VisitorAcceptor<T> {
+    fn accept(&self, visitor: &impl Visitor<T>) -> T;
 }
 
 #[derive(Clone, Debug)]
@@ -48,8 +48,8 @@ impl BinaryExpr {
     }
 }
 
-impl<T, U> VisitorAcceptor<T, U> for BinaryExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> U {
+impl<T> VisitorAcceptor<T> for BinaryExpr {
+    fn accept(&self, visitor: &impl Visitor<T>) -> T {
         visitor.visit_binary_expr(self.clone())
     }
 }
@@ -67,8 +67,8 @@ impl GroupingExpr {
     }
 }
 
-impl<T, U> VisitorAcceptor<T, U> for GroupingExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> U {
+impl<T> VisitorAcceptor<T> for GroupingExpr {
+    fn accept(&self, visitor: &impl Visitor<T>) -> T {
         visitor.visit_grouping_expr(self.clone())
     }
 }
@@ -84,8 +84,8 @@ impl LiteralExpr {
     }
 }
 
-impl<T, U> VisitorAcceptor<T, U> for LiteralExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> U {
+impl<T> VisitorAcceptor<T> for LiteralExpr {
+    fn accept(&self, visitor: &impl Visitor<T>) -> T {
         visitor.visit_literal_expr(self.clone())
     }
 }
@@ -105,8 +105,8 @@ impl UnaryExpr {
     }
 }
 
-impl<T, U> VisitorAcceptor<T, U> for UnaryExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> U {
+impl<T> VisitorAcceptor<T> for UnaryExpr {
+    fn accept(&self, visitor: &impl Visitor<T>) -> T {
         visitor.visit_unary_expr(self.clone())
     }
 }

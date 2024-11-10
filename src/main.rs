@@ -41,6 +41,7 @@ fn run(source: &str) {
     dbg!(&result);
     let mut intr = interpreter::Interpreter::new();
     let result = intr.interpret(result.unwrap());
+    dbg!(result);
 }
 
 fn run_prompt() {

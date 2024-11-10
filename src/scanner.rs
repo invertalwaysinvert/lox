@@ -124,7 +124,6 @@ impl<'a> Scanner<'a> {
 
         let keywords = self.get_keywords_table();
 
-        dbg!(&substring);
         match keywords.get(&substring) {
             Some(&keyword) => self.add_token(keyword),
             None => self.add_token(TokenType::Identifier),

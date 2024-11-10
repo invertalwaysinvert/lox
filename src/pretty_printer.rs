@@ -21,7 +21,7 @@ impl PrettyPrinter
 where
     PrettyPrinter: Visitor<String>,
 {
-    fn print<A: VisitorAcceptor<String, String>>(&self, expr: A) -> String {
+    fn print<A: VisitorAcceptor<String>>(&self, expr: A) -> String {
         expr.accept(self)
     }
 }

@@ -138,7 +138,7 @@ impl Parser {
         Err(ParserError {})
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<Token, ParserError> {
+    fn consume(&mut self, token_type: TokenType, _message: &str) -> Result<Token, ParserError> {
         if self.check(token_type) {
             Ok(self.advance())
         } else {
