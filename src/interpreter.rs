@@ -1,5 +1,5 @@
 use crate::{
-    expressions::{Expr, LiteralExpr, Visitor, VisitorAcceptor},
+    expr::{Expr, LiteralExpr, Visitor, VisitorAcceptor},
     tokens::{TokenLiteral, TokenType},
 };
 
@@ -38,11 +38,11 @@ where
 }
 
 impl Visitor<TokenLiteral> for Interpreter {
-    fn visit_literal_expr(&self, expr: crate::expressions::LiteralExpr) -> TokenLiteral {
+    fn visit_literal_expr(&self, expr: crate::expr::LiteralExpr) -> TokenLiteral {
         expr.value
     }
 
-    fn visit_grouping_expr(&self, expr: crate::expressions::GroupingExpr) -> TokenLiteral {
+    fn visit_grouping_expr(&self, expr: crate::expr::GroupingExpr) -> TokenLiteral {
         match *expr.expression {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
@@ -51,7 +51,7 @@ impl Visitor<TokenLiteral> for Interpreter {
         }
     }
 
-    fn visit_unary_expr(&self, expr: crate::expressions::UnaryExpr) -> TokenLiteral {
+    fn visit_unary_expr(&self, expr: crate::expr::UnaryExpr) -> TokenLiteral {
         let right = match *expr.right {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
@@ -70,7 +70,7 @@ impl Visitor<TokenLiteral> for Interpreter {
         }
     }
 
-    fn visit_binary_expr(&self, expr: crate::expressions::BinaryExpr) -> TokenLiteral {
+    fn visit_binary_expr(&self, expr: crate::expr::BinaryExpr) -> TokenLiteral {
         let left = match *expr.left {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),

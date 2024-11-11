@@ -2,12 +2,13 @@ use std::io;
 use std::io::Write;
 use std::{env, fs, process::exit};
 
-pub mod expressions;
+pub mod expr;
 pub mod interpreter;
 pub mod logger;
 pub mod parser;
 pub mod pretty_printer;
 pub mod scanner;
+pub mod stmt;
 pub mod tokens;
 pub mod types;
 

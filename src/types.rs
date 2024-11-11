@@ -1,9 +1,9 @@
-use crate::expressions;
+use crate::expr;
 
 #[derive(Clone, Debug)]
 pub enum LoxObject {
-    Binary(expressions::BinaryExpr),
-    Grouping(expressions::GroupingExpr),
-    Literal(expressions::LiteralExpr),
-    Unary(expressions::UnaryExpr),
+    Binary(expr::BinaryExpr),
+    Grouping(expr::GroupingExpr),
+    Literal(expr::LiteralExpr),
+    Unary(expr::UnaryExpr),
 }

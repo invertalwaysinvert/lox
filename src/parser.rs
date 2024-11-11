@@ -1,5 +1,5 @@
 use crate::{
-    expressions::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr},
+    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr},
     logger::error_token,
     tokens::{Token, TokenLiteral, TokenType},
 };
