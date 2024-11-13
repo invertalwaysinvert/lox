@@ -1,13 +1,15 @@
 use crate::{
-    expr::{Expr, LiteralExpr, Visitor, VisitorAcceptor},
+    expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
+    stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
     tokens::{TokenLiteral, TokenType},
 };
 
+#[derive(Default)]
 pub struct Interpreter {}
 
 impl Interpreter {
     pub fn new() -> Self {
-        Interpreter {}
+        Default::default()
     }
 
     fn is_truthy(&self, object: TokenLiteral) -> TokenLiteral {
@@ -17,27 +19,26 @@ impl Interpreter {
             _ => TokenLiteral::Bool(true),
         }
     }
+    pub fn interpret(self, statements: Vec<Stmt>) {
+        for statement in statements {
+            match statement {
+                Stmt::Expression(x) => self.execute(x),
+                Stmt::Print(x) => self.execute(x),
+            }
+        }
+    }
 }
 
 impl Interpreter
 where
-    Interpreter: Visitor<TokenLiteral>,
+    Interpreter: ExprVisitor<TokenLiteral>,
 {
-    pub fn interpret(self, expression: Expr) -> TokenLiteral {
-        match expression {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-        }
-    }
-
-    pub fn evaluate<A: VisitorAcceptor<TokenLiteral>>(&self, expr: A) -> TokenLiteral {
+    pub fn evaluate<A: ExprVisitorAcceptor<TokenLiteral>>(&self, expr: A) -> TokenLiteral {
         expr.accept(self)
     }
 }
 
-impl Visitor<TokenLiteral> for Interpreter {
+impl ExprVisitor<TokenLiteral> for Interpreter {
     fn visit_literal_expr(&self, expr: crate::expr::LiteralExpr) -> TokenLiteral {
         expr.value
     }
@@ -97,5 +98,35 @@ impl Visitor<TokenLiteral> for Interpreter {
             TokenType::EqualEqual => TokenLiteral::Bool(left == right),
             _ => panic!(),
         }
+    }
+}
+
+impl Interpreter
+where
+    Interpreter: StmtVisitor<()>,
+{
+    fn execute<A: StmtVisitorAcceptor<()>>(&self, stmt: A) {
+        stmt.accept(self)
+    }
+}
+
+impl StmtVisitor<()> for Interpreter {
+    fn visit_expression_stmt(&self, stmt: crate::stmt::ExpressionStmt) {
+        match *stmt.expression {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+        };
+    }
+
+    fn visit_print_stmt(&self, stmt: crate::stmt::PrintStmt) {
+        let value = match *stmt.expression {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+        };
+        println!("{}", value);
     }
 }

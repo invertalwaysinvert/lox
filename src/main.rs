@@ -40,9 +40,8 @@ fn run(source: &str) {
     let mut pars = parser::Parser::new(result);
     let result = pars.parse();
     dbg!(&result);
-    let mut intr = interpreter::Interpreter::new();
-    let result = intr.interpret(result.unwrap());
-    dbg!(result);
+    let intr = interpreter::Interpreter::new();
+    intr.interpret(result.unwrap());
 }
 
 fn run_prompt() {

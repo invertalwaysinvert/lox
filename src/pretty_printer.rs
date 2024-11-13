@@ -1,5 +1,5 @@
 use crate::{
-    expr::{BinaryExpr, Visitor, VisitorAcceptor},
+    expr::{BinaryExpr, ExprVisitor, ExprVisitorAcceptor},
     tokens::TokenLiteral,
 };
 
@@ -19,14 +19,14 @@ impl PrettyPrinter {
 
 impl PrettyPrinter
 where
-    PrettyPrinter: Visitor<String>,
+    PrettyPrinter: ExprVisitor<String>,
 {
-    fn print<A: VisitorAcceptor<String>>(&self, expr: A) -> String {
+    fn print<A: ExprVisitorAcceptor<String>>(&self, expr: A) -> String {
         expr.accept(self)
     }
 }
 
-impl Visitor<String> for PrettyPrinter {
+impl ExprVisitor<String> for PrettyPrinter {
     fn visit_binary_expr(&self, expr: BinaryExpr) -> String {
         PrettyPrinter::paranthesize(
             &expr.operator.lexeme,

@@ -83,7 +83,9 @@ impl Display for TokenLiteral {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenLiteral::None => write!(f, ""),
-            x => write!(f, "{}", x),
+            TokenLiteral::Bool(x) => write!(f, "{}", x),
+            TokenLiteral::Number(x) => write!(f, "{}", x),
+            TokenLiteral::String(x) => write!(f, "{}", x),
         }
     }
 }

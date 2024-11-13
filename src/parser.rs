@@ -1,6 +1,7 @@
 use crate::{
     expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr},
     logger::error_token,
+    stmt::{ExpressionStmt, PrintStmt, Stmt},
     tokens::{Token, TokenLiteral, TokenType},
 };
 
@@ -14,8 +15,31 @@ impl Parser {
         Parser { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Expr, ParserError> {
-        self.expression()
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, ParserError> {
+        let mut result = Vec::new();
+        while !self.is_at_end() {
+            result.push(self.statement()?);
+        }
+        Ok(result)
+    }
+
+    fn statement(&mut self) -> Result<Stmt, ParserError> {
+        if self.match_token(vec![TokenType::Print]) {
+            return self.print_statement();
+        }
+        self.expression_statement()
+    }
+
+    fn print_statement(&mut self) -> Result<Stmt, ParserError> {
+        let value = self.expression()?;
+        self.consume(TokenType::Semicolon, "Expect ';' after value.")?;
+        Ok(Stmt::Print(PrintStmt::new(value)))
+    }
+
+    fn expression_statement(&mut self) -> Result<Stmt, ParserError> {
+        let value = self.expression()?;
+        self.consume(TokenType::Semicolon, "Expect ';' after expression.")?;
+        Ok(Stmt::Expression(ExpressionStmt::new(value)))
     }
 
     fn expression(&mut self) -> Result<Expr, ParserError> {
@@ -146,11 +170,11 @@ impl Parser {
         }
     }
 
-    fn throw_error(&self, token: Token, message: &str) {
+    fn _throw_error(&self, token: Token, message: &str) {
         error_token(token, message);
     }
 
-    fn synchronize(&mut self) {
+    fn _synchronize(&mut self) {
         self.advance();
         while !self.is_at_end() {
             if self.previous().token_type == TokenType::Semicolon {

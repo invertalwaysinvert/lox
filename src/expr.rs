@@ -2,15 +2,15 @@ use std::fmt::Display;
 
 use crate::tokens::{Token, TokenLiteral};
 
-pub trait Visitor<T> {
+pub trait ExprVisitor<T> {
     fn visit_binary_expr(&self, expr: BinaryExpr) -> T;
     fn visit_grouping_expr(&self, expr: GroupingExpr) -> T;
     fn visit_literal_expr(&self, expr: LiteralExpr) -> T;
     fn visit_unary_expr(&self, expr: UnaryExpr) -> T;
 }
 
-pub trait VisitorAcceptor<T> {
-    fn accept(&self, visitor: &impl Visitor<T>) -> T;
+pub trait ExprVisitorAcceptor<T> {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T;
 }
 
 #[derive(Clone, Debug)]
@@ -24,8 +24,8 @@ pub enum Expr {
 impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Expr::Literal(x) => write!(f, "{}", x.value),
-            Expr::Grouping(x) => write!(f, "( group {} )", x.expression),
+            Self::Literal(x) => write!(f, "{}", x.value),
+            Self::Grouping(x) => write!(f, "( group {} )", x.expression),
             _ => write!(f, ""),
         }
     }
@@ -48,8 +48,8 @@ impl BinaryExpr {
     }
 }
 
-impl<T> VisitorAcceptor<T> for BinaryExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> T {
+impl<T> ExprVisitorAcceptor<T> for BinaryExpr {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
         visitor.visit_binary_expr(self.clone())
     }
 }
@@ -67,8 +67,8 @@ impl GroupingExpr {
     }
 }
 
-impl<T> VisitorAcceptor<T> for GroupingExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> T {
+impl<T> ExprVisitorAcceptor<T> for GroupingExpr {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
         visitor.visit_grouping_expr(self.clone())
     }
 }
@@ -84,8 +84,8 @@ impl LiteralExpr {
     }
 }
 
-impl<T> VisitorAcceptor<T> for LiteralExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> T {
+impl<T> ExprVisitorAcceptor<T> for LiteralExpr {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
         visitor.visit_literal_expr(self.clone())
     }
 }
@@ -105,8 +105,8 @@ impl UnaryExpr {
     }
 }
 
-impl<T> VisitorAcceptor<T> for UnaryExpr {
-    fn accept(&self, visitor: &impl Visitor<T>) -> T {
+impl<T> ExprVisitorAcceptor<T> for UnaryExpr {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
         visitor.visit_unary_expr(self.clone())
     }
 }
