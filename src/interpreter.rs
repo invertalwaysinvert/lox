@@ -1,15 +1,19 @@
 use crate::{
+    environment::Environment,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
     tokens::{TokenLiteral, TokenType},
 };
 
-#[derive(Default)]
-pub struct Interpreter {}
+pub struct Interpreter {
+    pub environment: Environment,
+}
 
 impl Interpreter {
     pub fn new() -> Self {
-        Default::default()
+        Self {
+            environment: Environment::new(),
+        }
     }
 
     fn is_truthy(&self, object: TokenLiteral) -> TokenLiteral {
@@ -19,11 +23,12 @@ impl Interpreter {
             _ => TokenLiteral::Bool(true),
         }
     }
-    pub fn interpret(self, statements: Vec<Stmt>) {
+    pub fn interpret(mut self, statements: Vec<Stmt>) {
         for statement in statements {
             match statement {
                 Stmt::Expression(x) => self.execute(x),
                 Stmt::Print(x) => self.execute(x),
+                Stmt::Var(x) => self.execute(x),
             }
         }
     }
@@ -39,6 +44,12 @@ where
 }
 
 impl ExprVisitor<TokenLiteral> for Interpreter {
+    fn visit_variable_expr(&self, expr: crate::expr::VariableExpr) -> TokenLiteral {
+        self.environment
+            .get(expr.name.lexeme)
+            .expect("Undefined variable found")
+    }
+
     fn visit_literal_expr(&self, expr: crate::expr::LiteralExpr) -> TokenLiteral {
         expr.value
     }
@@ -49,6 +60,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         }
     }
 
@@ -58,6 +70,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         };
 
         match expr.operator.token_type {
@@ -77,12 +90,14 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         };
         let right = match *expr.right {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         };
 
         match expr.operator.token_type {
@@ -105,28 +120,46 @@ impl Interpreter
 where
     Interpreter: StmtVisitor<()>,
 {
-    fn execute<A: StmtVisitorAcceptor<()>>(&self, stmt: A) {
+    fn execute<A: StmtVisitorAcceptor<()>>(&mut self, stmt: A) {
         stmt.accept(self)
     }
 }
 
 impl StmtVisitor<()> for Interpreter {
-    fn visit_expression_stmt(&self, stmt: crate::stmt::ExpressionStmt) {
+    fn visit_expression_stmt(&mut self, stmt: crate::stmt::ExpressionStmt) {
         match *stmt.expression {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         };
     }
 
-    fn visit_print_stmt(&self, stmt: crate::stmt::PrintStmt) {
+    fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) {
         let value = match *stmt.expression {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
             Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
         };
         println!("{}", value);
+    }
+
+    fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) {
+        let mut value = TokenLiteral::None;
+        let value = match stmt.initializer {
+            Some(f) => match *f {
+                Expr::Binary(x) => self.evaluate(x),
+                Expr::Grouping(x) => self.evaluate(x),
+                Expr::Literal(x) => self.evaluate(x),
+                Expr::Unary(x) => self.evaluate(x),
+                Expr::Variable(x) => self.evaluate(x),
+            },
+            None => TokenLiteral::None,
+        };
+
+        self.environment.define(stmt.name.lexeme, value);
     }
 }

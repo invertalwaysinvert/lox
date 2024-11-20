@@ -1,7 +1,7 @@
 use crate::{
-    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr},
+    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr},
     logger::error_token,
-    stmt::{ExpressionStmt, PrintStmt, Stmt},
+    stmt::{ExpressionStmt, PrintStmt, Stmt, VarStmt},
     tokens::{Token, TokenLiteral, TokenType},
 };
 
@@ -18,9 +18,20 @@ impl Parser {
     pub fn parse(&mut self) -> Result<Vec<Stmt>, ParserError> {
         let mut result = Vec::new();
         while !self.is_at_end() {
-            result.push(self.statement()?);
+            match self.declaration() {
+                Ok(stmt) => result.push(stmt),
+                Err(_) => self.synchronize(),
+            }
         }
         Ok(result)
+    }
+
+    fn declaration(&mut self) -> Result<Stmt, ParserError> {
+        if self.match_token(vec![TokenType::Var]) {
+            return self.variable_declaration();
+        } else {
+            return self.statement();
+        }
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserError> {
@@ -34,6 +45,20 @@ impl Parser {
         let value = self.expression()?;
         self.consume(TokenType::Semicolon, "Expect ';' after value.")?;
         Ok(Stmt::Print(PrintStmt::new(value)))
+    }
+
+    fn variable_declaration(&mut self) -> Result<Stmt, ParserError> {
+        let name = self.consume(TokenType::Identifier, "Expect variable name.")?;
+        let mut initializer = None;
+        if self.match_token(vec![TokenType::Equal]) {
+            initializer = Some(self.expression()?)
+        }
+
+        self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after variable declaration.",
+        );
+        Ok(Stmt::Var(VarStmt::new(name, initializer)))
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParserError> {
@@ -152,6 +177,9 @@ impl Parser {
         if self.match_token(vec![TokenType::Number, TokenType::String]) {
             return Ok(Expr::Literal(LiteralExpr::new(self.previous().literal)));
         }
+        if self.match_token(vec![TokenType::Identifier]) {
+            return Ok(Expr::Variable(VariableExpr::new(self.previous())));
+        }
         if self.match_token(vec![TokenType::LeftParen]) {
             let expr = self.expression()?;
             match self.consume(TokenType::RightParen, "Expect ')' after expression.") {
@@ -174,7 +202,7 @@ impl Parser {
         error_token(token, message);
     }
 
-    fn _synchronize(&mut self) {
+    fn synchronize(&mut self) {
         self.advance();
         while !self.is_at_end() {
             if self.previous().token_type == TokenType::Semicolon {

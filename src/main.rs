@@ -2,15 +2,15 @@ use std::io;
 use std::io::Write;
 use std::{env, fs, process::exit};
 
+pub mod environment;
+pub mod exceptions;
 pub mod expr;
 pub mod interpreter;
 pub mod logger;
 pub mod parser;
-pub mod pretty_printer;
 pub mod scanner;
 pub mod stmt;
 pub mod tokens;
-pub mod types;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();

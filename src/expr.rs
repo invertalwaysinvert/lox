@@ -7,6 +7,7 @@ pub trait ExprVisitor<T> {
     fn visit_grouping_expr(&self, expr: GroupingExpr) -> T;
     fn visit_literal_expr(&self, expr: LiteralExpr) -> T;
     fn visit_unary_expr(&self, expr: UnaryExpr) -> T;
+    fn visit_variable_expr(&self, expr: VariableExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -19,6 +20,7 @@ pub enum Expr {
     Grouping(GroupingExpr),
     Literal(LiteralExpr),
     Unary(UnaryExpr),
+    Variable(VariableExpr),
 }
 
 impl Display for Expr {
@@ -108,5 +110,22 @@ impl UnaryExpr {
 impl<T> ExprVisitorAcceptor<T> for UnaryExpr {
     fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
         visitor.visit_unary_expr(self.clone())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct VariableExpr {
+    pub name: Token,
+}
+
+impl VariableExpr {
+    pub fn new(name: Token) -> Self {
+        VariableExpr { name }
+    }
+}
+
+impl<T> ExprVisitorAcceptor<T> for VariableExpr {
+    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+        visitor.visit_variable_expr(self.clone())
     }
 }
