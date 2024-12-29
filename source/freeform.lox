@@ -14,3 +14,10 @@ print first + last;
 }
 
 print first + last;
+
+if (true) {
+print "Success";
+}
+
+if (false) print "Failure"; else print "Success";
+

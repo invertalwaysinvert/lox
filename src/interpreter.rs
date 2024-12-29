@@ -30,6 +30,7 @@ impl Interpreter {
                 Stmt::Print(x) => self.execute(x),
                 Stmt::Var(x) => self.execute(x),
                 Stmt::Block(x) => self.execute(x),
+                Stmt::If(x) => self.execute(x),
             }
         }
     }
@@ -43,6 +44,7 @@ impl Interpreter {
                 Stmt::Print(x) => self.execute(x),
                 Stmt::Var(x) => self.execute(x),
                 Stmt::Block(x) => self.execute(x),
+                Stmt::If(x) => self.execute(x),
             }
         }
         self.environment = previous;
@@ -199,5 +201,38 @@ impl StmtVisitor<()> for Interpreter {
 
     fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) {
         self.execute_block(stmt.statements, self.environment.clone())
+    }
+
+    fn visit_if_stmt(&mut self, stmt: crate::stmt::IfStmt) {
+        let value = match stmt.condition {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
+            Expr::Assign(x) => self.evaluate(x),
+        };
+        match self.is_truthy(value) {
+            TokenLiteral::Bool(true) => match *stmt.then_branch {
+                Stmt::Expression(x) => self.execute(x),
+                Stmt::Print(x) => self.execute(x),
+                Stmt::Var(x) => self.execute(x),
+                Stmt::Block(x) => self.execute(x),
+                Stmt::If(x) => self.execute(x),
+            },
+
+            TokenLiteral::Bool(false) => {
+                if let Some(s) = *stmt.else_branch {
+                    match s {
+                        Stmt::Expression(x) => self.execute(x),
+                        Stmt::Print(x) => self.execute(x),
+                        Stmt::Var(x) => self.execute(x),
+                        Stmt::Block(x) => self.execute(x),
+                        Stmt::If(x) => self.execute(x),
+                    }
+                }
+            }
+            _ => panic!(),
+        }
     }
 }

@@ -1,7 +1,7 @@
 use crate::{
     expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr},
     logger::error_token,
-    stmt::{BlockStmt, ExpressionStmt, PrintStmt, Stmt, VarStmt},
+    stmt::{BlockStmt, ExpressionStmt, IfStmt, PrintStmt, Stmt, VarStmt},
     tokens::{Token, TokenLiteral, TokenType},
 };
 
@@ -35,6 +35,9 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserError> {
+        if self.match_token(vec![TokenType::If]) {
+            return self.if_statement();
+        }
         if self.match_token(vec![TokenType::Print]) {
             return self.print_statement();
         }
@@ -42,6 +45,20 @@ impl Parser {
             return Ok(Stmt::Block(BlockStmt::new(self.block()?)));
         }
         self.expression_statement()
+    }
+
+    fn if_statement(&mut self) -> Result<Stmt, ParserError> {
+        self.consume(TokenType::LeftParen, "Expect '(' after if")?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen, "Expect '(' after if")?;
+
+        let then_branch = self.statement()?;
+        let else_branch = if self.match_token(vec![TokenType::Else]) {
+            Some(self.statement()?)
+        } else {
+            None
+        };
+        Ok(Stmt::If(IfStmt::new(condition, then_branch, else_branch)))
     }
 
     fn block(&mut self) -> Result<Vec<Stmt>, ParserError> {
@@ -99,7 +116,7 @@ impl Parser {
             };
         }
 
-        return expr;
+        expr
     }
 
     fn equality(&mut self) -> Result<Expr, ParserError> {

@@ -7,6 +7,7 @@ pub trait StmtVisitor<T> {
     fn visit_print_stmt(&mut self, stmt: PrintStmt) -> T;
     fn visit_var_stmt(&mut self, stmt: VarStmt) -> T;
     fn visit_block_stmt(&mut self, stmt: BlockStmt) -> T;
+    fn visit_if_stmt(&mut self, stmt: IfStmt) -> T;
 }
 
 pub trait StmtVisitorAcceptor<T> {
@@ -19,6 +20,7 @@ pub enum Stmt {
     Print(PrintStmt),
     Var(VarStmt),
     Block(BlockStmt),
+    If(IfStmt),
 }
 
 impl Display for Stmt {
@@ -34,6 +36,9 @@ impl Display for Stmt {
                 }
             } // TODO: This is wrong, fix it
             Self::Block(x) => {
+                write!(f, "{:?}", x)
+            }
+            Self::If(x) => {
                 write!(f, "{:?}", x)
             }
         }
@@ -115,5 +120,28 @@ impl BlockStmt {
 impl<T> StmtVisitorAcceptor<T> for BlockStmt {
     fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
         visitor.visit_block_stmt(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct IfStmt {
+    pub condition: Expr,
+    pub then_branch: Box<Stmt>,
+    pub else_branch: Box<Option<Stmt>>,
+}
+
+impl IfStmt {
+    pub fn new(condition: Expr, then_branch: Stmt, else_branch: Option<Stmt>) -> Self {
+        IfStmt {
+            condition,
+            then_branch: Box::new(then_branch),
+            else_branch: Box::new(else_branch),
+        }
+    }
+}
+
+impl<T> StmtVisitorAcceptor<T> for IfStmt {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+        visitor.visit_if_stmt(self.clone())
     }
 }
