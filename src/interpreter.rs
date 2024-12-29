@@ -16,6 +16,28 @@ impl Interpreter {
         }
     }
 
+    fn evaluate_expr(&mut self, expr: Expr) -> TokenLiteral {
+        match expr {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
+            Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
+        }
+    }
+
+    fn execute_stmt(&mut self, statement: Stmt) {
+        match statement {
+            Stmt::Expression(x) => self.execute(x),
+            Stmt::Print(x) => self.execute(x),
+            Stmt::Var(x) => self.execute(x),
+            Stmt::Block(x) => self.execute(x),
+            Stmt::If(x) => self.execute(x),
+        }
+    }
+
     fn is_truthy(&self, object: TokenLiteral) -> TokenLiteral {
         match object {
             TokenLiteral::None => TokenLiteral::Bool(false),
@@ -25,13 +47,7 @@ impl Interpreter {
     }
     pub fn interpret(mut self, statements: Vec<Stmt>) {
         for statement in statements {
-            match statement {
-                Stmt::Expression(x) => self.execute(x),
-                Stmt::Print(x) => self.execute(x),
-                Stmt::Var(x) => self.execute(x),
-                Stmt::Block(x) => self.execute(x),
-                Stmt::If(x) => self.execute(x),
-            }
+            self.execute_stmt(statement)
         }
     }
 
@@ -39,13 +55,7 @@ impl Interpreter {
         let previous = environment.clone();
         self.environment = environment;
         for stmt in statements {
-            match stmt {
-                Stmt::Expression(x) => self.execute(x),
-                Stmt::Print(x) => self.execute(x),
-                Stmt::Var(x) => self.execute(x),
-                Stmt::Block(x) => self.execute(x),
-                Stmt::If(x) => self.execute(x),
-            }
+            self.execute_stmt(stmt);
         }
         self.environment = previous;
     }
@@ -62,15 +72,7 @@ where
 
 impl ExprVisitor<TokenLiteral> for Interpreter {
     fn visit_assign_expr(&mut self, expr: crate::expr::AssignExpr) -> TokenLiteral {
-        let value = match *expr.value {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        let value = self.evaluate_expr(*expr.value);
         self.environment.assign(expr.name, value.clone());
         value
     }
@@ -86,27 +88,11 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
     }
 
     fn visit_grouping_expr(&mut self, expr: crate::expr::GroupingExpr) -> TokenLiteral {
-        match *expr.expression {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        }
+        self.evaluate_expr(*expr.expression)
     }
 
     fn visit_unary_expr(&mut self, expr: crate::expr::UnaryExpr) -> TokenLiteral {
-        let right = match *expr.right {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        let right = self.evaluate_expr(*expr.right);
 
         match expr.operator.token_type {
             // Todo: Negate the bang
@@ -120,25 +106,8 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
     }
 
     fn visit_binary_expr(&mut self, expr: crate::expr::BinaryExpr) -> TokenLiteral {
-        let left = match *expr.left {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
-        let right = match *expr.right {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
-
+        let left = self.evaluate_expr(*expr.left);
+        let right = self.evaluate_expr(*expr.right);
         match expr.operator.token_type {
             TokenType::Greater => TokenLiteral::Bool(left > right),
             TokenType::GreaterEqual => TokenLiteral::Bool(left >= right),
@@ -155,15 +124,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
     }
 
     fn visit_logical_expr(&mut self, expr: crate::expr::LogicalExpr) -> TokenLiteral {
-        let left = match *expr.left.clone() {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        let left = self.evaluate_expr(*expr.left);
         if expr.operator.token_type == TokenType::Or {
             if let TokenLiteral::Bool(true) = self.is_truthy(left.clone()) {
                 return left;
@@ -171,15 +132,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
         } else if let TokenLiteral::Bool(false) = self.is_truthy(left.clone()) {
             return left;
         }
-        match *expr.right {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        }
+        self.evaluate_expr(*expr.right)
     }
 }
 
@@ -194,41 +147,17 @@ where
 
 impl StmtVisitor<()> for Interpreter {
     fn visit_expression_stmt(&mut self, stmt: crate::stmt::ExpressionStmt) {
-        match stmt.expression {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        self.evaluate_expr(stmt.expression);
     }
 
     fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) {
-        let value = match stmt.expression {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        let value = self.evaluate_expr(stmt.expression);
         println!("{}", value);
     }
 
     fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) {
         let value = match stmt.initializer {
-            Some(f) => match f {
-                Expr::Binary(x) => self.evaluate(x),
-                Expr::Grouping(x) => self.evaluate(x),
-                Expr::Literal(x) => self.evaluate(x),
-                Expr::Unary(x) => self.evaluate(x),
-                Expr::Variable(x) => self.evaluate(x),
-                Expr::Assign(x) => self.evaluate(x),
-                Expr::Logical(x) => self.evaluate(x),
-            },
+            Some(f) => self.evaluate_expr(f),
             None => TokenLiteral::None,
         };
 
@@ -240,33 +169,12 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_if_stmt(&mut self, stmt: crate::stmt::IfStmt) {
-        let value = match stmt.condition {
-            Expr::Binary(x) => self.evaluate(x),
-            Expr::Grouping(x) => self.evaluate(x),
-            Expr::Literal(x) => self.evaluate(x),
-            Expr::Unary(x) => self.evaluate(x),
-            Expr::Variable(x) => self.evaluate(x),
-            Expr::Assign(x) => self.evaluate(x),
-            Expr::Logical(x) => self.evaluate(x),
-        };
+        let value = self.evaluate_expr(stmt.condition);
         match self.is_truthy(value) {
-            TokenLiteral::Bool(true) => match *stmt.then_branch {
-                Stmt::Expression(x) => self.execute(x),
-                Stmt::Print(x) => self.execute(x),
-                Stmt::Var(x) => self.execute(x),
-                Stmt::Block(x) => self.execute(x),
-                Stmt::If(x) => self.execute(x),
-            },
-
+            TokenLiteral::Bool(true) => self.execute_stmt(*stmt.then_branch),
             TokenLiteral::Bool(false) => {
                 if let Some(s) = *stmt.else_branch {
-                    match s {
-                        Stmt::Expression(x) => self.execute(x),
-                        Stmt::Print(x) => self.execute(x),
-                        Stmt::Var(x) => self.execute(x),
-                        Stmt::Block(x) => self.execute(x),
-                        Stmt::If(x) => self.execute(x),
-                    }
+                    self.execute_stmt(s)
                 }
             }
             _ => panic!(),
