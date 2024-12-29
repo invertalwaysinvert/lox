@@ -1,5 +1,5 @@
 use crate::{
-    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr},
+    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr},
     logger::error_token,
     stmt::{BlockStmt, ExpressionStmt, IfStmt, PrintStmt, Stmt, VarStmt},
     tokens::{Token, TokenLiteral, TokenType},
@@ -100,7 +100,7 @@ impl Parser {
     }
 
     fn assignment(&mut self) -> Result<Expr, ParserError> {
-        let expr = self.equality();
+        let expr = self.or();
         if self.match_token(vec![TokenType::Equal]) {
             let _equals = self.previous();
             let value = self.assignment()?;
@@ -117,6 +117,28 @@ impl Parser {
         }
 
         expr
+    }
+
+    fn or(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.and()?;
+
+        while self.match_token(vec![TokenType::Or]) {
+            let operator = self.previous();
+            let right = self.and()?;
+            expr = Expr::Logical(LogicalExpr::new(expr, operator, right));
+        }
+        Ok(expr)
+    }
+
+    fn and(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.equality()?;
+
+        while self.match_token(vec![TokenType::And]) {
+            let operator = self.previous();
+            let right = self.equality()?;
+            expr = Expr::Logical(LogicalExpr::new(expr, operator, right));
+        }
+        Ok(expr)
     }
 
     fn equality(&mut self) -> Result<Expr, ParserError> {

@@ -21,3 +21,9 @@ print "Success";
 
 if (false) print "Failure"; else print "Success";
 
+if (true and true and true) print "andChainSuccess";
+if (true and false and true) print "andChainFailure";
+
+if (false or false or true) print "orChainSuccess";
+if (false or false or false) print "orChainFailure";
+

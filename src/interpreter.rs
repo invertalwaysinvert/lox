@@ -69,6 +69,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
         self.environment.assign(expr.name, value.clone());
         value
@@ -92,6 +93,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         }
     }
 
@@ -103,6 +105,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
 
         match expr.operator.token_type {
@@ -124,6 +127,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
         let right = match *expr.right {
             Expr::Binary(x) => self.evaluate(x),
@@ -132,6 +136,7 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
 
         match expr.operator.token_type {
@@ -146,6 +151,34 @@ impl ExprVisitor<TokenLiteral> for Interpreter {
             TokenType::BangEqual => TokenLiteral::Bool(left != right),
             TokenType::EqualEqual => TokenLiteral::Bool(left == right),
             _ => panic!(),
+        }
+    }
+
+    fn visit_logical_expr(&mut self, expr: crate::expr::LogicalExpr) -> TokenLiteral {
+        let left = match *expr.left.clone() {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
+            Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
+        };
+        if expr.operator.token_type == TokenType::Or {
+            if let TokenLiteral::Bool(true) = self.is_truthy(left.clone()) {
+                return left;
+            }
+        } else if let TokenLiteral::Bool(false) = self.is_truthy(left.clone()) {
+            return left;
+        }
+        match *expr.right {
+            Expr::Binary(x) => self.evaluate(x),
+            Expr::Grouping(x) => self.evaluate(x),
+            Expr::Literal(x) => self.evaluate(x),
+            Expr::Unary(x) => self.evaluate(x),
+            Expr::Variable(x) => self.evaluate(x),
+            Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         }
     }
 }
@@ -168,6 +201,7 @@ impl StmtVisitor<()> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
     }
 
@@ -179,6 +213,7 @@ impl StmtVisitor<()> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
         println!("{}", value);
     }
@@ -192,6 +227,7 @@ impl StmtVisitor<()> for Interpreter {
                 Expr::Unary(x) => self.evaluate(x),
                 Expr::Variable(x) => self.evaluate(x),
                 Expr::Assign(x) => self.evaluate(x),
+                Expr::Logical(x) => self.evaluate(x),
             },
             None => TokenLiteral::None,
         };
@@ -211,6 +247,7 @@ impl StmtVisitor<()> for Interpreter {
             Expr::Unary(x) => self.evaluate(x),
             Expr::Variable(x) => self.evaluate(x),
             Expr::Assign(x) => self.evaluate(x),
+            Expr::Logical(x) => self.evaluate(x),
         };
         match self.is_truthy(value) {
             TokenLiteral::Bool(true) => match *stmt.then_branch {

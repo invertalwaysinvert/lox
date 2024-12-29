@@ -9,6 +9,7 @@ pub trait ExprVisitor<T> {
     fn visit_unary_expr(&mut self, expr: UnaryExpr) -> T;
     fn visit_variable_expr(&mut self, expr: VariableExpr) -> T;
     fn visit_assign_expr(&mut self, expr: AssignExpr) -> T;
+    fn visit_logical_expr(&mut self, expr: LogicalExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -23,6 +24,7 @@ pub enum Expr {
     Unary(UnaryExpr),
     Variable(VariableExpr),
     Assign(AssignExpr),
+    Logical(LogicalExpr),
 }
 
 impl Display for Expr {
@@ -150,5 +152,27 @@ impl AssignExpr {
 impl<T> ExprVisitorAcceptor<T> for AssignExpr {
     fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_assign_expr(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LogicalExpr {
+    pub left: Box<Expr>,
+    pub operator: Token,
+    pub right: Box<Expr>,
+}
+
+impl LogicalExpr {
+    pub fn new(left: Expr, operator: Token, right: Expr) -> Self {
+        LogicalExpr {
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for LogicalExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_logical_expr(self.clone())
     }
 }
