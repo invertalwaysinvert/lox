@@ -1,7 +1,7 @@
 use crate::{
     expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, UnaryExpr, VariableExpr},
     logger::error_token,
-    stmt::{ExpressionStmt, PrintStmt, Stmt, VarStmt},
+    stmt::{BlockStmt, ExpressionStmt, PrintStmt, Stmt, VarStmt},
     tokens::{Token, TokenLiteral, TokenType},
 };
 
@@ -38,7 +38,18 @@ impl Parser {
         if self.match_token(vec![TokenType::Print]) {
             return self.print_statement();
         }
+        if self.match_token(vec![TokenType::LeftBrace]) {
+            return Ok(Stmt::Block(BlockStmt::new(self.block()?)));
+        }
         self.expression_statement()
+    }
+
+    fn block(&mut self) -> Result<Vec<Stmt>, ParserError> {
+        let mut statments: Vec<Stmt> = Vec::new();
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            statments.push(self.declaration()?);
+        }
+        Ok(statments)
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParserError> {

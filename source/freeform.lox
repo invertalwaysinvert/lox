@@ -2,3 +2,15 @@ print 111;
 
 var a = 4;
 print a;
+
+var first = "Vinayak";
+var last = "Kaushik";
+
+print first + last;
+
+{
+  var first = "Devika";
+  print first + last;
+}
+
+print first + last;

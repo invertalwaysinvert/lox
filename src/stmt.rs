@@ -6,6 +6,7 @@ pub trait StmtVisitor<T> {
     fn visit_expression_stmt(&mut self, stmt: ExpressionStmt) -> T;
     fn visit_print_stmt(&mut self, stmt: PrintStmt) -> T;
     fn visit_var_stmt(&mut self, stmt: VarStmt) -> T;
+    fn visit_block_stmt(&mut self, stmt: BlockStmt) -> T;
 }
 
 pub trait StmtVisitorAcceptor<T> {
@@ -17,6 +18,7 @@ pub enum Stmt {
     Expression(ExpressionStmt),
     Print(PrintStmt),
     Var(VarStmt),
+    Block(BlockStmt),
 }
 
 impl Display for Stmt {
@@ -31,6 +33,9 @@ impl Display for Stmt {
                     write!(f, "")
                 }
             } // TODO: This is wrong, fix it
+            Self::Block(x) => {
+                write!(f, "{:?}", x)
+            }
         }
     }
 }
@@ -97,5 +102,22 @@ impl VarStmt {
 impl<T> StmtVisitorAcceptor<T> for VarStmt {
     fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
         visitor.visit_var_stmt(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct BlockStmt {
+    pub statements: Vec<Stmt>,
+}
+
+impl BlockStmt {
+    pub fn new(statements: Vec<Stmt>) -> Self {
+        BlockStmt { statements }
+    }
+}
+
+impl<T> StmtVisitorAcceptor<T> for BlockStmt {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+        visitor.visit_block_stmt(self.clone())
     }
 }

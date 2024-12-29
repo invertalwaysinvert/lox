@@ -29,8 +29,23 @@ impl Interpreter {
                 Stmt::Expression(x) => self.execute(x),
                 Stmt::Print(x) => self.execute(x),
                 Stmt::Var(x) => self.execute(x),
+                Stmt::Block(x) => self.execute(x),
             }
         }
+    }
+
+    fn execute_block(&mut self, statements: Vec<Stmt>, environment: Environment) {
+        let previous = environment.clone();
+        self.environment = environment;
+        for stmt in statements {
+            match stmt {
+                Stmt::Expression(x) => self.execute(x),
+                Stmt::Print(x) => self.execute(x),
+                Stmt::Var(x) => self.execute(x),
+                Stmt::Block(x) => self.execute(x),
+            }
+        }
+        self.environment = previous;
     }
 }
 
@@ -180,5 +195,9 @@ impl StmtVisitor<()> for Interpreter {
         };
 
         self.environment.define(stmt.name.lexeme, value);
+    }
+
+    fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) {
+        self.execute_block(stmt.statements, self.environment.clone())
     }
 }
