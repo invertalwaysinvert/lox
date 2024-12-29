@@ -159,7 +159,7 @@ where
 
 impl StmtVisitor<()> for Interpreter {
     fn visit_expression_stmt(&mut self, stmt: crate::stmt::ExpressionStmt) {
-        match *stmt.expression {
+        match stmt.expression {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
@@ -170,7 +170,7 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) {
-        let value = match *stmt.expression {
+        let value = match stmt.expression {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
             Expr::Literal(x) => self.evaluate(x),
@@ -183,7 +183,7 @@ impl StmtVisitor<()> for Interpreter {
 
     fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) {
         let value = match stmt.initializer {
-            Some(f) => match *f {
+            Some(f) => match f {
                 Expr::Binary(x) => self.evaluate(x),
                 Expr::Grouping(x) => self.evaluate(x),
                 Expr::Literal(x) => self.evaluate(x),

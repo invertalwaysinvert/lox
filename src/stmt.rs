@@ -42,14 +42,12 @@ impl Display for Stmt {
 
 #[derive(Clone, Debug)]
 pub struct ExpressionStmt {
-    pub expression: Box<Expr>,
+    pub expression: Expr,
 }
 
 impl ExpressionStmt {
     pub fn new(expression: Expr) -> Self {
-        ExpressionStmt {
-            expression: Box::new(expression),
-        }
+        ExpressionStmt { expression }
     }
 }
 
@@ -61,14 +59,12 @@ impl<T> StmtVisitorAcceptor<T> for ExpressionStmt {
 
 #[derive(Clone, Debug)]
 pub struct PrintStmt {
-    pub expression: Box<Expr>,
+    pub expression: Expr,
 }
 
 impl PrintStmt {
     pub fn new(expression: Expr) -> Self {
-        PrintStmt {
-            expression: Box::new(expression),
-        }
+        PrintStmt { expression }
     }
 }
 
@@ -81,7 +77,7 @@ impl<T> StmtVisitorAcceptor<T> for PrintStmt {
 #[derive(Clone, Debug)]
 pub struct VarStmt {
     pub name: Token,
-    pub initializer: Option<Box<Expr>>,
+    pub initializer: Option<Expr>,
 }
 
 impl VarStmt {
@@ -89,7 +85,7 @@ impl VarStmt {
         match initializer {
             Some(x) => VarStmt {
                 name,
-                initializer: Some(Box::new(x)),
+                initializer: Some(x),
             },
             None => VarStmt {
                 name,
