@@ -22,7 +22,7 @@ impl Environment {
 
     pub fn assign(&mut self, name: Token, value: TokenLiteral) {
         match self.values.get(&name.lexeme) {
-            Some(x) => self.values.insert(name.lexeme, value),
+            Some(_x) => self.values.insert(name.lexeme, value),
             None => panic!("Undefined variable '{}'.", name.lexeme),
         };
     }

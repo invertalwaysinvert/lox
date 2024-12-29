@@ -167,7 +167,6 @@ impl StmtVisitor<()> for Interpreter {
     }
 
     fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) {
-        let mut value = TokenLiteral::None;
         let value = match stmt.initializer {
             Some(f) => match *f {
                 Expr::Binary(x) => self.evaluate(x),

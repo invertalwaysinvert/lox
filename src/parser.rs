@@ -28,9 +28,9 @@ impl Parser {
 
     fn declaration(&mut self) -> Result<Stmt, ParserError> {
         if self.match_token(vec![TokenType::Var]) {
-            return self.variable_declaration();
+            self.variable_declaration()
         } else {
-            return self.statement();
+            self.statement()
         }
     }
 
@@ -57,7 +57,7 @@ impl Parser {
         self.consume(
             TokenType::Semicolon,
             "Expect ';' after variable declaration.",
-        );
+        )?;
         Ok(Stmt::Var(VarStmt::new(name, initializer)))
     }
 
@@ -74,7 +74,7 @@ impl Parser {
     fn assignment(&mut self) -> Result<Expr, ParserError> {
         let expr = self.equality();
         if self.match_token(vec![TokenType::Equal]) {
-            let equals = self.previous();
+            let _equals = self.previous();
             let value = self.assignment()?;
 
             if let Ok(y) = expr {
