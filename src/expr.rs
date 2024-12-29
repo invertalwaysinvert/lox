@@ -3,15 +3,16 @@ use std::fmt::Display;
 use crate::tokens::{Token, TokenLiteral};
 
 pub trait ExprVisitor<T> {
-    fn visit_binary_expr(&self, expr: BinaryExpr) -> T;
-    fn visit_grouping_expr(&self, expr: GroupingExpr) -> T;
-    fn visit_literal_expr(&self, expr: LiteralExpr) -> T;
-    fn visit_unary_expr(&self, expr: UnaryExpr) -> T;
-    fn visit_variable_expr(&self, expr: VariableExpr) -> T;
+    fn visit_binary_expr(&mut self, expr: BinaryExpr) -> T;
+    fn visit_grouping_expr(&mut self, expr: GroupingExpr) -> T;
+    fn visit_literal_expr(&mut self, expr: LiteralExpr) -> T;
+    fn visit_unary_expr(&mut self, expr: UnaryExpr) -> T;
+    fn visit_variable_expr(&mut self, expr: VariableExpr) -> T;
+    fn visit_assign_expr(&mut self, expr: AssignExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T;
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T;
 }
 
 #[derive(Clone, Debug)]
@@ -21,6 +22,7 @@ pub enum Expr {
     Literal(LiteralExpr),
     Unary(UnaryExpr),
     Variable(VariableExpr),
+    Assign(AssignExpr),
 }
 
 impl Display for Expr {
@@ -51,7 +53,7 @@ impl BinaryExpr {
 }
 
 impl<T> ExprVisitorAcceptor<T> for BinaryExpr {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_binary_expr(self.clone())
     }
 }
@@ -70,7 +72,7 @@ impl GroupingExpr {
 }
 
 impl<T> ExprVisitorAcceptor<T> for GroupingExpr {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_grouping_expr(self.clone())
     }
 }
@@ -87,7 +89,7 @@ impl LiteralExpr {
 }
 
 impl<T> ExprVisitorAcceptor<T> for LiteralExpr {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_literal_expr(self.clone())
     }
 }
@@ -108,7 +110,7 @@ impl UnaryExpr {
 }
 
 impl<T> ExprVisitorAcceptor<T> for UnaryExpr {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_unary_expr(self.clone())
     }
 }
@@ -125,7 +127,28 @@ impl VariableExpr {
 }
 
 impl<T> ExprVisitorAcceptor<T> for VariableExpr {
-    fn accept(&self, visitor: &impl ExprVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_variable_expr(self.clone())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AssignExpr {
+    pub name: Token,
+    pub value: Box<Expr>,
+}
+
+impl AssignExpr {
+    pub fn new(name: Token, value: Expr) -> Self {
+        AssignExpr {
+            name,
+            value: Box::new(value),
+        }
+    }
+}
+
+impl<T> ExprVisitorAcceptor<T> for AssignExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_assign_expr(self.clone())
     }
 }

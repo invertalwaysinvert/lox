@@ -36,10 +36,10 @@ fn run_file(file_path: &str) {
 fn run(source: &str) {
     let mut obj = scanner::Scanner::new(source);
     let result = obj.scan_tokens();
-    dbg!(&result);
+    // dbg!(&result);
     let mut pars = parser::Parser::new(result);
     let result = pars.parse();
-    dbg!(&result);
+    // dbg!(&result);
     let intr = interpreter::Interpreter::new();
     intr.interpret(result.unwrap());
 }

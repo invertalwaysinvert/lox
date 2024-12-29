@@ -68,7 +68,27 @@ impl Parser {
     }
 
     fn expression(&mut self) -> Result<Expr, ParserError> {
-        self.equality()
+        self.assignment()
+    }
+
+    fn assignment(&mut self) -> Result<Expr, ParserError> {
+        let expr = self.equality();
+        if self.match_token(vec![TokenType::Equal]) {
+            let equals = self.previous();
+            let value = self.assignment()?;
+
+            if let Ok(y) = expr {
+                return match y {
+                    Expr::Variable(x) => Ok(Expr::Assign(crate::expr::AssignExpr {
+                        name: x.name,
+                        value: Box::new(value),
+                    })),
+                    _ => Err(ParserError {}),
+                };
+            };
+        }
+
+        return expr;
     }
 
     fn equality(&mut self) -> Result<Expr, ParserError> {
