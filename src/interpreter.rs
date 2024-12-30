@@ -35,6 +35,7 @@ impl Interpreter {
             Stmt::Var(x) => self.execute(x),
             Stmt::Block(x) => self.execute(x),
             Stmt::If(x) => self.execute(x),
+            Stmt::While(x) => self.execute(x),
         }
     }
 
@@ -178,6 +179,17 @@ impl StmtVisitor<()> for Interpreter {
                 }
             }
             _ => panic!(),
+        }
+    }
+
+    fn visit_while_stmt(&mut self, stmt: crate::stmt::WhileStmt) {
+        loop {
+            let value = self.evaluate_expr(stmt.condition.clone());
+            match self.is_truthy(value) {
+                TokenLiteral::Bool(true) => self.execute_stmt(*stmt.body.clone()),
+                TokenLiteral::Bool(false) => break,
+                _ => panic!(),
+            }
         }
     }
 }
