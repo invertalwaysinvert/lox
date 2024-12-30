@@ -35,6 +35,9 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserError> {
+        if self.match_token(vec![TokenType::For]) {
+            return self.for_statement();
+        }
         if self.match_token(vec![TokenType::If]) {
             return self.if_statement();
         }
@@ -48,6 +51,54 @@ impl Parser {
             return Ok(Stmt::Block(BlockStmt::new(self.block()?)));
         }
         self.expression_statement()
+    }
+
+    fn for_statement(&mut self) -> Result<Stmt, ParserError> {
+        self.consume(TokenType::LeftParen, "Expect '(' after 'for'")?;
+
+        // Initializer
+        let initializer;
+        if self.match_token(vec![TokenType::Semicolon]) {
+            initializer = None;
+        } else if self.match_token(vec![TokenType::Var]) {
+            initializer = Some(self.variable_declaration()?);
+        } else {
+            initializer = Some(self.expression_statement()?);
+        }
+
+        // Condition
+        let mut condition = None;
+        if !self.check(TokenType::Semicolon) {
+            condition = Some(self.expression()?);
+        }
+        self.consume(TokenType::Semicolon, "Expect ';' after loop condition")?;
+
+        // Increment
+        let mut increment = None;
+        if !self.check(TokenType::RightParen) {
+            increment = Some(self.expression()?);
+        }
+        self.consume(TokenType::RightParen, "Expect ')' after for clauses")?;
+        let mut body = self.statement()?;
+
+        if let Some(expression) = increment {
+            body = Stmt::Block(BlockStmt::new(vec![
+                body,
+                Stmt::Expression(ExpressionStmt::new(expression)),
+            ]))
+        }
+
+        let condition = match condition {
+            Some(x) => x,
+            None => Expr::Literal(LiteralExpr::new(TokenLiteral::Bool(true))),
+        };
+        body = Stmt::While(WhileStmt::new(condition, body));
+
+        if let Some(statement) = initializer {
+            body = Stmt::Block(BlockStmt::new(vec![statement, body]))
+        }
+
+        Ok(body)
     }
 
     fn while_statement(&mut self) -> Result<Stmt, ParserError> {

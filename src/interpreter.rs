@@ -167,6 +167,8 @@ impl StmtVisitor<()> for Interpreter {
 
     fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) {
         self.execute_block(stmt.statements, self.environment.clone())
+        // TODO: Cloning the environment here is leading to weird behaviour where assign values to
+        // variables inside a while block is not being reflected outside it
     }
 
     fn visit_if_stmt(&mut self, stmt: crate::stmt::IfStmt) {
