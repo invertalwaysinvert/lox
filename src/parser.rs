@@ -1,8 +1,10 @@
 use crate::{
-    expr::{BinaryExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr},
+    expr::{
+        BinaryExpr, CallExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr,
+    },
     logger::error_token,
     stmt::{BlockStmt, ExpressionStmt, IfStmt, PrintStmt, Stmt, VarStmt, WhileStmt},
-    tokens::{Token, TokenLiteral, TokenType},
+    tokens::{LoxObject, Token, TokenType},
 };
 
 pub struct Parser {
@@ -90,7 +92,7 @@ impl Parser {
 
         let condition = match condition {
             Some(x) => x,
-            None => Expr::Literal(LiteralExpr::new(TokenLiteral::Bool(true))),
+            None => Expr::Literal(LiteralExpr::new(LoxObject::Bool(true))),
         };
         body = Stmt::While(WhileStmt::new(condition, body));
 
@@ -293,18 +295,45 @@ impl Parser {
             let right = self.unary()?;
             return Ok(Expr::Unary(UnaryExpr::new(right, operator)));
         }
-        self.primary()
+        self.call()
+    }
+
+    fn call(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.primary()?;
+
+        loop {
+            if self.match_token(vec![TokenType::LeftParen]) {
+                expr = self.finish_call(expr)?;
+            } else {
+                break;
+            }
+        }
+
+        Ok(expr)
+    }
+
+    fn finish_call(&mut self, callee: Expr) -> Result<Expr, ParserError> {
+        let mut arguments = Vec::new();
+        if !self.check(TokenType::RightParen) {
+            while self.match_token(vec![TokenType::Comma]) {
+                arguments.push(self.expression()?)
+            }
+        }
+
+        let paren = self.consume(TokenType::RightParen, "Expect ')' after arguments")?;
+
+        Ok(Expr::Call(CallExpr::new(callee, paren, arguments)))
     }
 
     fn primary(&mut self) -> Result<Expr, ParserError> {
         if self.match_token(vec![TokenType::False]) {
-            return Ok(Expr::Literal(LiteralExpr::new(TokenLiteral::Bool(false))));
+            return Ok(Expr::Literal(LiteralExpr::new(LoxObject::Bool(false))));
         }
         if self.match_token(vec![TokenType::True]) {
-            return Ok(Expr::Literal(LiteralExpr::new(TokenLiteral::Bool(true))));
+            return Ok(Expr::Literal(LiteralExpr::new(LoxObject::Bool(true))));
         }
         if self.match_token(vec![TokenType::Nil]) {
-            return Ok(Expr::Literal(LiteralExpr::new(TokenLiteral::None)));
+            return Ok(Expr::Literal(LiteralExpr::new(LoxObject::None)));
         }
         if self.match_token(vec![TokenType::Number, TokenType::String]) {
             return Ok(Expr::Literal(LiteralExpr::new(self.previous().literal)));

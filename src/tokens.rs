@@ -3,16 +3,18 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
+use crate::callable::LoxCallable;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
-    pub literal: TokenLiteral,
+    pub literal: LoxObject,
     pub line: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: TokenLiteral, line: usize) -> Self {
+    pub fn new(token_type: TokenType, lexeme: String, literal: LoxObject, line: usize) -> Self {
         Token {
             token_type,
             lexeme,
@@ -28,64 +30,78 @@ impl Display for Token {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum TokenLiteral {
+#[derive(Debug, PartialEq, PartialOrd)]
+pub enum LoxObject {
     String(String),
     Number(f32),
     Bool(bool),
     None,
+    Callable(Box<LoxCallable>),
 }
 
-impl Add for TokenLiteral {
-    type Output = TokenLiteral;
+impl Clone for LoxObject {
+    fn clone(&self) -> Self {
+        match self {
+            Self::String(x) => LoxObject::String(x.clone()),
+            Self::Number(x) => LoxObject::Number(*x),
+            Self::Bool(x) => LoxObject::Bool(*x),
+            Self::None => LoxObject::None,
+            Self::Callable(x) => LoxObject::Callable(Box::new(*x.clone())),
+        }
+    }
+}
+
+impl Add for LoxObject {
+    type Output = LoxObject;
 
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x + y),
-            (TokenLiteral::String(x), TokenLiteral::String(y)) => TokenLiteral::String(x + &y),
+            (LoxObject::Number(x), LoxObject::Number(y)) => LoxObject::Number(x + y),
+            (LoxObject::String(x), LoxObject::String(y)) => LoxObject::String(x + &y),
             _ => panic!(),
         }
     }
 }
 
-impl Sub for TokenLiteral {
-    type Output = TokenLiteral;
+impl Sub for LoxObject {
+    type Output = LoxObject;
 
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x - y),
+            (LoxObject::Number(x), LoxObject::Number(y)) => LoxObject::Number(x - y),
             _ => panic!(),
         }
     }
 }
 
-impl Mul for TokenLiteral {
-    type Output = TokenLiteral;
+impl Mul for LoxObject {
+    type Output = LoxObject;
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x * y),
+            (LoxObject::Number(x), LoxObject::Number(y)) => LoxObject::Number(x * y),
             _ => panic!(),
         }
     }
 }
 
-impl Div for TokenLiteral {
-    type Output = TokenLiteral;
+impl Div for LoxObject {
+    type Output = LoxObject;
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (TokenLiteral::Number(x), TokenLiteral::Number(y)) => TokenLiteral::Number(x / y),
+            (LoxObject::Number(x), LoxObject::Number(y)) => LoxObject::Number(x / y),
             _ => panic!(),
         }
     }
 }
 
-impl Display for TokenLiteral {
+impl Display for LoxObject {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TokenLiteral::None => write!(f, ""),
-            TokenLiteral::Bool(x) => write!(f, "{}", x),
-            TokenLiteral::Number(x) => write!(f, "{}", x),
-            TokenLiteral::String(x) => write!(f, "{}", x),
+            LoxObject::None => write!(f, ""),
+            LoxObject::Bool(x) => write!(f, "{}", x),
+            LoxObject::Number(x) => write!(f, "{}", x),
+            LoxObject::String(x) => write!(f, "{}", x),
+            LoxObject::Callable(_x) => write!(f, "<loxFunction>"),
         }
     }
 }

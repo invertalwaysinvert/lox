@@ -2,6 +2,7 @@ use std::io;
 use std::io::Write;
 use std::{env, fs, process::exit};
 
+pub mod callable;
 pub mod environment;
 pub mod exceptions;
 pub mod expr;

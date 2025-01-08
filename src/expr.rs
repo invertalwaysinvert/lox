@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::tokens::{Token, TokenLiteral};
+use crate::tokens::{LoxObject, Token};
 
 pub trait ExprVisitor<T> {
     fn visit_binary_expr(&mut self, expr: BinaryExpr) -> T;
@@ -10,6 +10,7 @@ pub trait ExprVisitor<T> {
     fn visit_variable_expr(&mut self, expr: VariableExpr) -> T;
     fn visit_assign_expr(&mut self, expr: AssignExpr) -> T;
     fn visit_logical_expr(&mut self, expr: LogicalExpr) -> T;
+    fn visit_call_expr(&mut self, expr: CallExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -25,6 +26,7 @@ pub enum Expr {
     Variable(VariableExpr),
     Assign(AssignExpr),
     Logical(LogicalExpr),
+    Call(CallExpr),
 }
 
 impl Display for Expr {
@@ -81,11 +83,11 @@ impl<T> ExprVisitorAcceptor<T> for GroupingExpr {
 
 #[derive(Clone, Debug)]
 pub struct LiteralExpr {
-    pub value: TokenLiteral,
+    pub value: LoxObject,
 }
 
 impl LiteralExpr {
-    pub fn new(value: TokenLiteral) -> Self {
+    pub fn new(value: LoxObject) -> Self {
         LiteralExpr { value }
     }
 }
@@ -174,5 +176,27 @@ impl LogicalExpr {
 impl<T> ExprVisitorAcceptor<T> for LogicalExpr {
     fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_logical_expr(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CallExpr {
+    pub callee: Box<Expr>,
+    pub paren: Token,
+    pub arguments: Vec<Expr>,
+}
+
+impl CallExpr {
+    pub fn new(callee: Expr, paren: Token, arguments: Vec<Expr>) -> Self {
+        CallExpr {
+            callee: Box::new(callee),
+            paren,
+            arguments,
+        }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for CallExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_call_expr(self.clone())
     }
 }

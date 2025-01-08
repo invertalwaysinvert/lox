@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     logger,
-    tokens::{Token, TokenLiteral, TokenType},
+    tokens::{LoxObject, Token, TokenType},
 };
 
 pub struct Scanner<'a> {
@@ -32,7 +32,7 @@ impl<'a> Scanner<'a> {
         self.tokens.push(Token {
             token_type: TokenType::Eof,
             lexeme: "".to_string(),
-            literal: TokenLiteral::None,
+            literal: LoxObject::None,
             line: self.line,
         });
         self.tokens.clone()
@@ -170,7 +170,7 @@ impl<'a> Scanner<'a> {
             .collect();
         self.add_token_with_literal(
             TokenType::Number,
-            TokenLiteral::Number(substring.parse::<f32>().unwrap()),
+            LoxObject::Number(substring.parse::<f32>().unwrap()),
         )
     }
 
@@ -195,7 +195,7 @@ impl<'a> Scanner<'a> {
             .skip(self.start + 1)
             .take(self.current - 1 - (self.start + 1))
             .collect();
-        self.add_token_with_literal(TokenType::String, TokenLiteral::String(literal));
+        self.add_token_with_literal(TokenType::String, LoxObject::String(literal));
     }
 
     fn peek(&self) -> char {
@@ -248,12 +248,12 @@ impl<'a> Scanner<'a> {
         self.tokens.push(Token {
             token_type: token,
             lexeme,
-            literal: TokenLiteral::None,
+            literal: LoxObject::None,
             line: self.line,
         })
     }
 
-    fn add_token_with_literal(&mut self, token: TokenType, literal: TokenLiteral) {
+    fn add_token_with_literal(&mut self, token: TokenType, literal: LoxObject) {
         let lexeme = self
             .source
             .chars()

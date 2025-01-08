@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use crate::{
     exceptions::RuntimeError,
-    tokens::{Token, TokenLiteral},
+    tokens::{LoxObject},
 };
 
 #[derive(Clone)]
 pub struct Environment {
     enclosing: Option<Box<Environment>>,
-    pub values: HashMap<String, TokenLiteral>,
+    pub values: HashMap<String, LoxObject>,
 }
 
 impl Environment {
@@ -26,27 +26,27 @@ impl Environment {
         }
     }
 
-    pub fn define(&mut self, name: String, value: TokenLiteral) {
+    pub fn define(&mut self, name: String, value: LoxObject) {
         self.values.insert(name, value);
     }
 
-    pub fn assign(&mut self, name: Token, value: TokenLiteral) {
-        if let Some(_x) = self.values.get(&name.lexeme) {
-            self.values.insert(name.lexeme, value);
+    pub fn assign(&mut self, name: String, value: LoxObject) {
+        if let Some(_x) = self.values.get(&name) {
+            self.values.insert(name, value);
             return;
         };
 
         match &mut self.enclosing {
             Some(x) => {
-                (*x).assign(name.clone(), value);
+                (*x).assign(name, value);
                 return;
             }
             None => (),
         };
-        panic!("Undefined variable '{}'.", name.lexeme)
+        panic!("Undefined variable '{}'.", name)
     }
 
-    pub fn get(&self, name: String) -> Result<TokenLiteral, RuntimeError> {
+    pub fn get(&self, name: String) -> Result<LoxObject, RuntimeError> {
         if let Some(x) = self.values.get(&name) {
             return Ok(x.clone());
         };
