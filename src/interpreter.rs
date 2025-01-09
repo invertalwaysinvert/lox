@@ -1,8 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use crate::{
     callable::{LoxCallable, LoxFunction},
     environment::Environment,
+    exceptions::Return,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
     tokens::{LoxObject, TokenType},
@@ -35,7 +34,7 @@ impl Interpreter {
         }
     }
 
-    fn execute_stmt(&mut self, statement: Stmt) {
+    fn execute_stmt(&mut self, statement: Stmt) -> Result<LoxObject, Return> {
         match statement {
             Stmt::Expression(x) => self.execute(x),
             Stmt::Print(x) => self.execute(x),
@@ -44,6 +43,7 @@ impl Interpreter {
             Stmt::If(x) => self.execute(x),
             Stmt::While(x) => self.execute(x),
             Stmt::Fun(x) => self.execute(x),
+            Stmt::Return(x) => self.execute(x),
         }
     }
 
@@ -54,19 +54,25 @@ impl Interpreter {
             _ => LoxObject::Bool(true),
         }
     }
-    pub fn interpret(mut self, statements: Vec<Stmt>) {
+    pub fn interpret(mut self, statements: Vec<Stmt>) -> Result<LoxObject, Return> {
         for statement in statements {
-            self.execute_stmt(statement)
+            self.execute_stmt(statement)?;
         }
+        Ok(LoxObject::None)
     }
 
-    pub fn execute_block(&mut self, statements: Vec<Stmt>, environment: Environment) {
+    pub fn execute_block(
+        &mut self,
+        statements: Vec<Stmt>,
+        environment: Environment,
+    ) -> Result<(), Return> {
         let previous = environment.clone();
         self.environment = environment;
         for stmt in statements {
-            self.execute_stmt(stmt);
+            self.execute_stmt(stmt)?;
         }
         self.environment = previous;
+        Ok(())
     }
 }
 
@@ -94,8 +100,8 @@ impl ExprVisitor<LoxObject> for Interpreter {
 
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
         self.environment
-            .get(expr.name.lexeme)
-            .expect("Undefined variable found")
+            .get(expr.name.lexeme.clone())
+            .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
     }
 
     fn visit_literal_expr(&mut self, expr: crate::expr::LiteralExpr) -> LoxObject {
@@ -173,66 +179,84 @@ impl ExprVisitor<LoxObject> for Interpreter {
 
 impl Interpreter
 where
-    Interpreter: StmtVisitor<()>,
+    Interpreter: StmtVisitor<LoxObject>,
 {
-    fn execute<A: StmtVisitorAcceptor<()>>(&mut self, stmt: A) {
+    fn execute<A: StmtVisitorAcceptor<LoxObject>>(&mut self, stmt: A) -> Result<LoxObject, Return> {
         stmt.accept(self)
     }
 }
 
-impl StmtVisitor<()> for Interpreter {
-    fn visit_expression_stmt(&mut self, stmt: crate::stmt::ExpressionStmt) {
-        self.evaluate_expr(stmt.expression);
+impl StmtVisitor<LoxObject> for Interpreter {
+    fn visit_expression_stmt(
+        &mut self,
+        stmt: crate::stmt::ExpressionStmt,
+    ) -> Result<LoxObject, Return> {
+        Ok(self.evaluate_expr(stmt.expression))
     }
 
-    fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) {
+    fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) -> Result<LoxObject, Return> {
         let value = self.evaluate_expr(stmt.expression);
         println!("{}", value);
+        Ok(LoxObject::None)
     }
 
-    fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) {
+    fn visit_var_stmt(&mut self, stmt: crate::stmt::VarStmt) -> Result<LoxObject, Return> {
         let value = match stmt.initializer {
             Some(f) => self.evaluate_expr(f),
             None => LoxObject::None,
         };
 
         self.environment.define(stmt.name.lexeme, value);
+        Ok(LoxObject::None)
     }
 
-    fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) {
-        self.execute_block(stmt.statements, self.environment.clone())
+    fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) -> Result<LoxObject, Return> {
+        self.execute_block(stmt.statements, self.environment.clone())?;
         // TODO: Cloning the environment here is leading to weird behaviour where assign values to
         // variables inside a while block is not being reflected outside it
+        Ok(LoxObject::None)
     }
 
-    fn visit_if_stmt(&mut self, stmt: crate::stmt::IfStmt) {
+    fn visit_if_stmt(&mut self, stmt: crate::stmt::IfStmt) -> Result<LoxObject, Return> {
         let value = self.evaluate_expr(stmt.condition);
         match self.is_truthy(value) {
-            LoxObject::Bool(true) => self.execute_stmt(*stmt.then_branch),
+            LoxObject::Bool(true) => self.execute_stmt(*stmt.then_branch)?,
             LoxObject::Bool(false) => {
                 if let Some(s) = *stmt.else_branch {
-                    self.execute_stmt(s)
+                    self.execute_stmt(s)?
+                } else {
+                    LoxObject::None
                 }
             }
             _ => panic!(),
-        }
+        };
+        Ok(LoxObject::None)
     }
 
-    fn visit_while_stmt(&mut self, stmt: crate::stmt::WhileStmt) {
+    fn visit_while_stmt(&mut self, stmt: crate::stmt::WhileStmt) -> Result<LoxObject, Return> {
         loop {
             let value = self.evaluate_expr(stmt.condition.clone());
             match self.is_truthy(value) {
-                LoxObject::Bool(true) => self.execute_stmt(*stmt.body.clone()),
-                LoxObject::Bool(false) => break,
+                LoxObject::Bool(true) => self.execute_stmt(*stmt.body.clone()).unwrap(),
+                LoxObject::Bool(false) => break Ok(LoxObject::None),
                 _ => panic!(),
-            }
+            };
         }
     }
 
-    fn visit_fun_stmt(&mut self, stmt: crate::stmt::FunStmt) {
+    fn visit_fun_stmt(&mut self, stmt: crate::stmt::FunStmt) -> Result<LoxObject, Return> {
         let fun_name = stmt.name.lexeme.clone();
         let function = LoxFunction::new(stmt);
         self.environment
             .define(fun_name, LoxObject::Callable(Box::new(function)));
+        Ok(LoxObject::None)
+    }
+
+    fn visit_return_stmt(&mut self, stmt: crate::stmt::ReturnStmt) -> Result<LoxObject, Return> {
+        let mut output = LoxObject::None;
+        if let Some(value) = *stmt.value {
+            output = self.evaluate_expr(value)
+        }
+        Err(Return { value: output })
     }
 }

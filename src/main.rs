@@ -43,7 +43,7 @@ fn run(source: &str) {
     let result = pars.parse();
     // dbg!(&result);
     let intr = interpreter::Interpreter::new();
-    intr.interpret(result.unwrap());
+    intr.interpret(result.unwrap()).unwrap();
 }
 
 fn run_prompt() {

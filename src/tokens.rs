@@ -1,9 +1,10 @@
 use std::{
+    cmp::Ordering,
     fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::callable::{LoxCallable, LoxFunction};
+use crate::callable::{LoxFunction};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -40,8 +41,17 @@ pub enum LoxObject {
 }
 
 impl PartialOrd for LoxObject {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        todo!()
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Self::String(l), Self::String(r)) => l.partial_cmp(r),
+            (Self::Number(l), Self::Number(r)) => l.partial_cmp(r),
+            (Self::Bool(l), Self::Bool(r)) => l.partial_cmp(r),
+            (Self::Callable(_), Self::Callable(_)) => None,
+            (Self::None, Self::None) => Some(Ordering::Equal),
+            (Self::None, _) => Some(Ordering::Less),
+            (_, Self::None) => Some(Ordering::Greater),
+            (_, _) => None,
+        }
     }
 }
 
@@ -51,7 +61,7 @@ impl PartialEq for LoxObject {
             (Self::String(l0), Self::String(r0)) => l0 == r0,
             (Self::Number(l0), Self::Number(r0)) => l0 == r0,
             (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
-            (Self::Callable(l0), Self::Callable(r0)) => false,
+            (Self::Callable(_l0), Self::Callable(_r0)) => false,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }

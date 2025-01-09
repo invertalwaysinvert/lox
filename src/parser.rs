@@ -3,7 +3,9 @@ use crate::{
         BinaryExpr, CallExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr,
     },
     logger::error_token,
-    stmt::{BlockStmt, ExpressionStmt, FunStmt, IfStmt, PrintStmt, Stmt, VarStmt, WhileStmt},
+    stmt::{
+        BlockStmt, ExpressionStmt, FunStmt, IfStmt, PrintStmt, ReturnStmt, Stmt, VarStmt, WhileStmt,
+    },
     tokens::{LoxObject, Token, TokenType},
 };
 
@@ -71,6 +73,9 @@ impl Parser {
         if self.match_token(vec![TokenType::Print]) {
             return self.print_statement();
         }
+        if self.match_token(vec![TokenType::Return]) {
+            return self.return_statement();
+        }
         if self.match_token(vec![TokenType::While]) {
             return self.while_statement();
         }
@@ -78,6 +83,16 @@ impl Parser {
             return Ok(Stmt::Block(BlockStmt::new(self.block()?)));
         }
         self.expression_statement()
+    }
+
+    fn return_statement(&mut self) -> Result<Stmt, ParserError> {
+        let keyword = self.previous();
+        let mut value = None;
+        if !self.check(TokenType::Semicolon) {
+            value = Some(self.expression()?);
+        }
+        self.consume(TokenType::Semicolon, "Expect ';' after return.")?;
+        Ok(Stmt::Return(ReturnStmt::new(keyword, value)))
     }
 
     fn for_statement(&mut self) -> Result<Stmt, ParserError> {

@@ -42,3 +42,10 @@ fun sayHi(first, last) {
 
 sayHi("Dear", "Reader");
 
+fun greaterThanY(x) {
+  if (x > 5) { print x; print (" is greater than 5"); }
+}
+
+greaterThanY(6);
+greaterThanY(6);
+greaterThanY(6);

@@ -22,13 +22,13 @@ pub struct LoxFunction {
 }
 
 impl PartialOrd for LoxFunction {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
         Some(Ordering::Equal)
     }
 }
 
 impl PartialEq for LoxFunction {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
@@ -53,8 +53,10 @@ impl LoxCallable for LoxFunction {
                 arguments.get(i as usize).unwrap().clone(),
             )
         }
-        interpreter.execute_block(self.declaration.body.clone(), environment);
-        LoxObject::None
+        match interpreter.execute_block(self.declaration.body.clone(), environment) {
+            Ok(_) => LoxObject::None,
+            Err(x) => x.value,
+        }
     }
 
     fn arity(&self) -> u32 {

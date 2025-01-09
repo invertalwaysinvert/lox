@@ -12,8 +12,8 @@ impl LoxCallable for Clock {
 
     fn call(
         &self,
-        interpreter: &mut crate::interpreter::Interpreter,
-        arguments: Vec<crate::tokens::LoxObject>,
+        _interpreter: &mut crate::interpreter::Interpreter,
+        _arguments: Vec<crate::tokens::LoxObject>,
     ) -> crate::tokens::LoxObject {
         LoxObject::Number(
             SystemTime::now()

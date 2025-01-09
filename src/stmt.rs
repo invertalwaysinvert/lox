@@ -1,19 +1,20 @@
 use std::fmt::Display;
 
-use crate::{expr::Expr, tokens::Token};
+use crate::{exceptions::Return, expr::Expr, tokens::Token};
 
 pub trait StmtVisitor<T> {
-    fn visit_expression_stmt(&mut self, stmt: ExpressionStmt) -> T;
-    fn visit_print_stmt(&mut self, stmt: PrintStmt) -> T;
-    fn visit_var_stmt(&mut self, stmt: VarStmt) -> T;
-    fn visit_block_stmt(&mut self, stmt: BlockStmt) -> T;
-    fn visit_if_stmt(&mut self, stmt: IfStmt) -> T;
-    fn visit_while_stmt(&mut self, stmt: WhileStmt) -> T;
-    fn visit_fun_stmt(&mut self, stmt: FunStmt) -> T;
+    fn visit_expression_stmt(&mut self, stmt: ExpressionStmt) -> Result<T, Return>;
+    fn visit_print_stmt(&mut self, stmt: PrintStmt) -> Result<T, Return>;
+    fn visit_var_stmt(&mut self, stmt: VarStmt) -> Result<T, Return>;
+    fn visit_block_stmt(&mut self, stmt: BlockStmt) -> Result<T, Return>;
+    fn visit_if_stmt(&mut self, stmt: IfStmt) -> Result<T, Return>;
+    fn visit_while_stmt(&mut self, stmt: WhileStmt) -> Result<T, Return>;
+    fn visit_fun_stmt(&mut self, stmt: FunStmt) -> Result<T, Return>;
+    fn visit_return_stmt(&mut self, stmt: ReturnStmt) -> Result<T, Return>;
 }
 
 pub trait StmtVisitorAcceptor<T> {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T;
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return>;
 }
 
 #[derive(Clone, Debug)]
@@ -25,6 +26,7 @@ pub enum Stmt {
     If(IfStmt),
     While(WhileStmt),
     Fun(FunStmt),
+    Return(ReturnStmt),
 }
 
 impl Display for Stmt {
@@ -51,6 +53,9 @@ impl Display for Stmt {
             Self::Fun(x) => {
                 write!(f, "{:?}", x)
             }
+            Self::Return(x) => {
+                write!(f, "{:?}", x)
+            }
         }
     }
 }
@@ -67,7 +72,7 @@ impl ExpressionStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for ExpressionStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_expression_stmt(self.clone())
     }
 }
@@ -84,7 +89,7 @@ impl PrintStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for PrintStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_print_stmt(self.clone())
     }
 }
@@ -111,7 +116,7 @@ impl VarStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for VarStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_var_stmt(self.clone())
     }
 }
@@ -128,7 +133,7 @@ impl BlockStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for BlockStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_block_stmt(self.clone())
     }
 }
@@ -151,7 +156,7 @@ impl IfStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for IfStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_if_stmt(self.clone())
     }
 }
@@ -172,7 +177,7 @@ impl WhileStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for WhileStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_while_stmt(self.clone())
     }
 }
@@ -191,7 +196,29 @@ impl FunStmt {
 }
 
 impl<T> StmtVisitorAcceptor<T> for FunStmt {
-    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         visitor.visit_fun_stmt(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ReturnStmt {
+    pub keyword: Token,
+    pub value: Box<Option<Expr>>,
+}
+
+impl ReturnStmt {
+    pub fn new(keyword: Token, value: Option<Expr>) -> Self {
+        ReturnStmt {
+            keyword,
+            value: Box::new(value),
+        }
+    }
+}
+
+impl<T> StmtVisitorAcceptor<T> for ReturnStmt {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
+        let output = visitor.visit_return_stmt(self.clone())?;
+        Ok(output)
     }
 }
