@@ -35,7 +35,6 @@ var a = 5;
 // print a;
 // }
 
-for (var b = 3; b > 0; print 3) {
-}
 
-test(a);
+
+print clock();

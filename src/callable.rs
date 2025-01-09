@@ -1,14 +1,14 @@
 use crate::tokens::LoxObject;
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct LoxCallable {}
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub struct LoxCallable {
+    pub code: fn(Vec<LoxObject>) -> LoxObject,
+    pub arity: usize,
+    pub name: String,
+}
 
 impl LoxCallable {
-    fn call(&mut self, _arguments: Vec<LoxObject>) {
-        todo!()
-    }
-    fn arity(&self) -> i32 {
-        todo!();
-        1
+    pub fn new(code: fn(Vec<LoxObject>) -> LoxObject, arity: usize, name: String) -> Self {
+        LoxCallable { code, arity, name }
     }
 }

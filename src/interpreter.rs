@@ -1,4 +1,7 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::{
+    callable::LoxCallable,
     environment::Environment,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
@@ -10,6 +13,15 @@ pub struct Interpreter {
     pub globals: Environment,
 }
 
+fn get_system_time(_: Vec<LoxObject>) -> LoxObject {
+    LoxObject::Number(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as f32,
+    )
+}
+
 impl Interpreter {
     pub fn new() -> Self {
         let mut environment = Interpreter {
@@ -17,9 +29,12 @@ impl Interpreter {
             globals: Environment::new(),
         };
 
-        environment
-            .globals
-            .assign("clock".to_string(), LoxObject::None);
+        let clock = LoxObject::Callable(Box::new(LoxCallable::new(
+            get_system_time,
+            0,
+            "<native fn>".to_string(),
+        )));
+        environment.globals.define("clock".to_string(), clock);
 
         environment
     }
@@ -68,6 +83,12 @@ impl Interpreter {
             self.execute_stmt(stmt);
         }
         self.environment = previous;
+    }
+}
+
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -146,19 +167,21 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_call_expr(&mut self, expr: crate::expr::CallExpr) -> LoxObject {
-        let _callee = self.evaluate_expr(*expr.callee);
+        let callee = self.evaluate_expr(*expr.callee);
 
         let mut arguments = Vec::new();
         for argument in expr.arguments {
             arguments.push(self.evaluate_expr(argument));
         }
 
-        // TODO: Figure out how to cast callee to a callable object
-        // let function = (Callable)callee;
-        // function.call(self, arguments)
-        // if arguments.len() != function.arity() {
-        //     panic!("Unexpected number of arguments received");
-        // }
+        if let LoxObject::Callable(function) = callee {
+            if arguments.len() != function.arity {
+                panic!("Unexpected number of arguments received");
+            }
+            (function.code)(arguments.clone());
+        } else {
+            panic!("Expression not of type LoxCallable")
+        }
 
         LoxObject::None
     }
