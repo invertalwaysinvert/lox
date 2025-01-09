@@ -27,8 +27,8 @@
 //if (false or false or true) print "orChainSuccess";
 //if (false or false or false) print "orChainFailure";
 //
-var a = 5;
-
+// var a = 5;
+// 
 // while (a > 0) {
 // print a;
 // a = -1;
@@ -36,5 +36,9 @@ var a = 5;
 // }
 
 
+fun sayHi(first, last) {
+  print "Hi, " + first + " " + last + "!";
+}
 
-print clock();
+sayHi("Dear", "Reader");
+

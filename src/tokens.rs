@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::callable::LoxCallable;
+use crate::callable::{LoxCallable, LoxFunction};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -36,7 +36,7 @@ pub enum LoxObject {
     Number(f32),
     Bool(bool),
     None,
-    Callable(Box<dyn LoxCallable>),
+    Callable(Box<LoxFunction>),
 }
 
 impl PartialOrd for LoxObject {
@@ -59,12 +59,12 @@ impl PartialEq for LoxObject {
 
 impl Clone for LoxObject {
     fn clone(&self) -> Self {
-        match self {
+        match &self {
             Self::String(x) => LoxObject::String(x.clone()),
             Self::Number(x) => LoxObject::Number(*x),
             Self::Bool(x) => LoxObject::Bool(*x),
             Self::None => LoxObject::None,
-            Self::Callable(x) => LoxObject::Callable(*x.clone()),
+            Self::Callable(x) => LoxObject::Callable(Box::new(*x.clone())),
         }
     }
 }

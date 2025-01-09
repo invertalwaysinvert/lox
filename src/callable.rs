@@ -1,9 +1,17 @@
 use std::cmp::Ordering;
 
-use crate::{environment::Environment, interpreter::Interpreter, stmt::FunStmt, tokens::LoxObject};
+use crate::{
+    environment::Environment, interpreter::Interpreter, stmt::FunStmt, tokens::LoxObject,
+    utils::Clock,
+};
+
+pub enum LoxCallableType {
+    Fun(LoxFunction),
+    Clock(Clock),
+}
 
 pub trait LoxCallable: std::fmt::Debug {
-    fn call(&self, interpreter: Interpreter, arguments: Vec<LoxObject>) -> LoxObject;
+    fn call(&self, interpreter: &mut Interpreter, arguments: Vec<LoxObject>) -> LoxObject;
     fn arity(&self) -> u32;
     fn to_string(&self) -> String;
 }
@@ -32,8 +40,8 @@ impl LoxFunction {
 }
 
 impl LoxCallable for LoxFunction {
-    fn call(&self, interpreter: Interpreter, arguments: Vec<LoxObject>) -> LoxObject {
-        let mut environment = Environment::new_with_enclosing(interpreter.globals);
+    fn call(&self, interpreter: &mut Interpreter, arguments: Vec<LoxObject>) -> LoxObject {
+        let mut environment = Environment::new_with_enclosing(interpreter.globals.clone());
         for i in 0..self.arity() {
             environment.define(
                 self.declaration
@@ -45,6 +53,7 @@ impl LoxCallable for LoxFunction {
                 arguments.get(i as usize).unwrap().clone(),
             )
         }
+        interpreter.execute_block(self.declaration.body.clone(), environment);
         LoxObject::None
     }
 
@@ -53,6 +62,6 @@ impl LoxCallable for LoxFunction {
     }
 
     fn to_string(&self) -> String {
-        self.declaration.name.lexeme.clone()
+        format!("<fun {}", self.declaration.name.lexeme.clone())
     }
 }

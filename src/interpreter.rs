@@ -6,7 +6,6 @@ use crate::{
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
     tokens::{LoxObject, TokenType},
-    utils::Clock,
 };
 
 #[derive(Clone)]
@@ -17,15 +16,10 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Self {
-        let mut environment = Interpreter {
+        Interpreter {
             environment: Environment::new(),
             globals: Environment::new(),
-        };
-
-        let clock_func = LoxObject::Callable(Box::new(Clock {}));
-        environment.globals.define("clock".to_string(), clock_func);
-
-        environment
+        }
     }
 
     fn evaluate_expr(&mut self, expr: Expr) -> LoxObject {
@@ -66,7 +60,7 @@ impl Interpreter {
         }
     }
 
-    fn execute_block(&mut self, statements: Vec<Stmt>, environment: Environment) {
+    pub fn execute_block(&mut self, statements: Vec<Stmt>, environment: Environment) {
         let previous = environment.clone();
         self.environment = environment;
         for stmt in statements {
@@ -168,7 +162,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
             if arguments.len() != function.arity() as usize {
                 panic!("Unexpected number of arguments received");
             }
-            function.call(self.clone(), arguments);
+            function.call(self, arguments);
         } else {
             panic!("Expression not of type LoxCallable")
         }

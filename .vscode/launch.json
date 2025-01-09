@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "codelldb",
+      "request": "launch",
+      "name": "Alpha",
+      "cargo": {
+        "args": [
+          "build"
+        ]
+      },
+      "args": [
+        "source/freeform.lox"
+      ],
+      "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": [
+        "rust"
+      ]
+    }
+  ]
+}

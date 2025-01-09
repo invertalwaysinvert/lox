@@ -43,7 +43,7 @@ impl Parser {
         self.consume(
             TokenType::LeftParen,
             &format!("Expect '(' after {} name.", kind),
-        );
+        )?;
         let mut parameters = Vec::new();
         if !self.check(TokenType::RightParen) {
             loop {
@@ -53,9 +53,11 @@ impl Parser {
                 }
             }
         }
-        self.consume(TokenType::RightParen, "Expect ')' after parameters.");
-        self.consume(TokenType::LeftBrace, "Expect '{' before body");
+        self.consume(TokenType::RightParen, "Expect ')' after parameters.")?;
+        self.consume(TokenType::LeftBrace, "Expect '{' before body")?;
         let body = self.block()?;
+        // TODO: Maybe this is invalid vvvvv
+        self.consume(TokenType::RightBrace, "Expect '}' after body")?;
         Ok(Stmt::Fun(FunStmt::new(name, parameters, body)))
     }
 
@@ -338,8 +340,11 @@ impl Parser {
     fn finish_call(&mut self, callee: Expr) -> Result<Expr, ParserError> {
         let mut arguments = Vec::new();
         if !self.check(TokenType::RightParen) {
-            while self.match_token(vec![TokenType::Comma]) {
-                arguments.push(self.expression()?)
+            loop {
+                arguments.push(self.expression()?);
+                if !self.match_token(vec![TokenType::Comma]) {
+                    break;
+                }
             }
         }
 
@@ -404,6 +409,7 @@ impl Parser {
                 | TokenType::While => return,
                 _ => (),
             }
+            self.advance();
         }
     }
 }

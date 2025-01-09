@@ -12,7 +12,7 @@ impl LoxCallable for Clock {
 
     fn call(
         &self,
-        interpreter: crate::interpreter::Interpreter,
+        interpreter: &mut crate::interpreter::Interpreter,
         arguments: Vec<crate::tokens::LoxObject>,
     ) -> crate::tokens::LoxObject {
         LoxObject::Number(
