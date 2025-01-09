@@ -1,14 +1,58 @@
-use crate::tokens::LoxObject;
+use std::cmp::Ordering;
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct LoxCallable {
-    pub code: fn(Vec<LoxObject>) -> LoxObject,
-    pub arity: usize,
-    pub name: String,
+use crate::{environment::Environment, interpreter::Interpreter, stmt::FunStmt, tokens::LoxObject};
+
+pub trait LoxCallable: std::fmt::Debug {
+    fn call(&self, interpreter: Interpreter, arguments: Vec<LoxObject>) -> LoxObject;
+    fn arity(&self) -> u32;
+    fn to_string(&self) -> String;
 }
 
-impl LoxCallable {
-    pub fn new(code: fn(Vec<LoxObject>) -> LoxObject, arity: usize, name: String) -> Self {
-        LoxCallable { code, arity, name }
+#[derive(Debug, Clone)]
+pub struct LoxFunction {
+    pub declaration: FunStmt,
+}
+
+impl PartialOrd for LoxFunction {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(Ordering::Equal)
+    }
+}
+
+impl PartialEq for LoxFunction {
+    fn eq(&self, other: &Self) -> bool {
+        true
+    }
+}
+
+impl LoxFunction {
+    pub fn new(declaration: FunStmt) -> Self {
+        LoxFunction { declaration }
+    }
+}
+
+impl LoxCallable for LoxFunction {
+    fn call(&self, interpreter: Interpreter, arguments: Vec<LoxObject>) -> LoxObject {
+        let mut environment = Environment::new_with_enclosing(interpreter.globals);
+        for i in 0..self.arity() {
+            environment.define(
+                self.declaration
+                    .params
+                    .get(i as usize)
+                    .unwrap()
+                    .lexeme
+                    .clone(),
+                arguments.get(i as usize).unwrap().clone(),
+            )
+        }
+        LoxObject::None
+    }
+
+    fn arity(&self) -> u32 {
+        self.declaration.params.len() as u32
+    }
+
+    fn to_string(&self) -> String {
+        self.declaration.name.lexeme.clone()
     }
 }

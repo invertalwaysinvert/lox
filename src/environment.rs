@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    exceptions::RuntimeError,
-    tokens::{LoxObject},
-};
+use crate::{exceptions::RuntimeError, tokens::LoxObject};
 
 #[derive(Clone)]
 pub struct Environment {

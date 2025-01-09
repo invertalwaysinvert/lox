@@ -1,25 +1,18 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{
-    callable::LoxCallable,
+    callable::{LoxCallable, LoxFunction},
     environment::Environment,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
     tokens::{LoxObject, TokenType},
+    utils::Clock,
 };
 
+#[derive(Clone)]
 pub struct Interpreter {
     pub environment: Environment,
     pub globals: Environment,
-}
-
-fn get_system_time(_: Vec<LoxObject>) -> LoxObject {
-    LoxObject::Number(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as f32,
-    )
 }
 
 impl Interpreter {
@@ -29,12 +22,8 @@ impl Interpreter {
             globals: Environment::new(),
         };
 
-        let clock = LoxObject::Callable(Box::new(LoxCallable::new(
-            get_system_time,
-            0,
-            "<native fn>".to_string(),
-        )));
-        environment.globals.define("clock".to_string(), clock);
+        let clock_func = LoxObject::Callable(Box::new(Clock {}));
+        environment.globals.define("clock".to_string(), clock_func);
 
         environment
     }
@@ -176,10 +165,10 @@ impl ExprVisitor<LoxObject> for Interpreter {
         }
 
         if let LoxObject::Callable(function) = callee {
-            if arguments.len() != function.arity {
+            if arguments.len() != function.arity() as usize {
                 panic!("Unexpected number of arguments received");
             }
-            (function.code)(arguments.clone());
+            function.call(self.clone(), arguments);
         } else {
             panic!("Expression not of type LoxCallable")
         }
@@ -244,5 +233,12 @@ impl StmtVisitor<()> for Interpreter {
                 _ => panic!(),
             }
         }
+    }
+
+    fn visit_fun_stmt(&mut self, stmt: crate::stmt::FunStmt) {
+        let fun_name = stmt.name.lexeme.clone();
+        let function = LoxFunction::new(stmt);
+        self.environment
+            .define(fun_name, LoxObject::Callable(Box::new(function)));
     }
 }

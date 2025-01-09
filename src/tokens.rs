@@ -30,13 +30,31 @@ impl Display for Token {
     }
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug)]
 pub enum LoxObject {
     String(String),
     Number(f32),
     Bool(bool),
     None,
-    Callable(Box<LoxCallable>),
+    Callable(Box<dyn LoxCallable>),
+}
+
+impl PartialOrd for LoxObject {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        todo!()
+    }
+}
+
+impl PartialEq for LoxObject {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::String(l0), Self::String(r0)) => l0 == r0,
+            (Self::Number(l0), Self::Number(r0)) => l0 == r0,
+            (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
+            (Self::Callable(l0), Self::Callable(r0)) => false,
+            _ => core::mem::discriminant(self) == core::mem::discriminant(other),
+        }
+    }
 }
 
 impl Clone for LoxObject {
@@ -46,7 +64,7 @@ impl Clone for LoxObject {
             Self::Number(x) => LoxObject::Number(*x),
             Self::Bool(x) => LoxObject::Bool(*x),
             Self::None => LoxObject::None,
-            Self::Callable(x) => LoxObject::Callable(Box::new(*x.clone())),
+            Self::Callable(x) => LoxObject::Callable(*x.clone()),
         }
     }
 }
