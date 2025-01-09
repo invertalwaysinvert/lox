@@ -9,6 +9,7 @@ pub trait StmtVisitor<T> {
     fn visit_block_stmt(&mut self, stmt: BlockStmt) -> T;
     fn visit_if_stmt(&mut self, stmt: IfStmt) -> T;
     fn visit_while_stmt(&mut self, stmt: WhileStmt) -> T;
+    fn visit_fun_stmt(&mut self, stmt: FunStmt) -> T;
 }
 
 pub trait StmtVisitorAcceptor<T> {
@@ -23,6 +24,7 @@ pub enum Stmt {
     Block(BlockStmt),
     If(IfStmt),
     While(WhileStmt),
+    Fun(FunStmt),
 }
 
 impl Display for Stmt {
@@ -44,6 +46,9 @@ impl Display for Stmt {
                 write!(f, "{:?}", x)
             }
             Self::While(x) => {
+                write!(f, "{:?}", x)
+            }
+            Self::Fun(x) => {
                 write!(f, "{:?}", x)
             }
         }
@@ -169,5 +174,24 @@ impl WhileStmt {
 impl<T> StmtVisitorAcceptor<T> for WhileStmt {
     fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
         visitor.visit_while_stmt(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FunStmt {
+    pub name: Token,
+    pub params: Vec<Token>,
+    pub body: Vec<Stmt>,
+}
+
+impl FunStmt {
+    pub fn new(name: Token, params: Vec<Token>, body: Vec<Stmt>) -> Self {
+        FunStmt { name, params, body }
+    }
+}
+
+impl<T> StmtVisitorAcceptor<T> for FunStmt {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> T {
+        visitor.visit_fun_stmt(self.clone())
     }
 }

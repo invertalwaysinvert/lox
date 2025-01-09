@@ -3,7 +3,7 @@ use crate::{
         BinaryExpr, CallExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr,
     },
     logger::error_token,
-    stmt::{BlockStmt, ExpressionStmt, IfStmt, PrintStmt, Stmt, VarStmt, WhileStmt},
+    stmt::{BlockStmt, ExpressionStmt, FunStmt, IfStmt, PrintStmt, Stmt, VarStmt, WhileStmt},
     tokens::{LoxObject, Token, TokenType},
 };
 
@@ -29,11 +29,34 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParserError> {
-        if self.match_token(vec![TokenType::Var]) {
+        if self.match_token(vec![TokenType::Fun]) {
+            self.function("function")
+        } else if self.match_token(vec![TokenType::Var]) {
             self.variable_declaration()
         } else {
             self.statement()
         }
+    }
+
+    fn function(&mut self, kind: &str) -> Result<Stmt, ParserError> {
+        let name = self.consume(TokenType::Identifier, &format!("Expect {} name.", kind))?;
+        self.consume(
+            TokenType::LeftParen,
+            &format!("Expect '(' after {} name.", kind),
+        );
+        let mut parameters = Vec::new();
+        if !self.check(TokenType::RightParen) {
+            loop {
+                parameters.push(self.consume(TokenType::Identifier, "Expect parameter name.")?);
+                if !self.match_token(vec![TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+        self.consume(TokenType::RightParen, "Expect ')' after parameters.");
+        self.consume(TokenType::LeftBrace, "Expect '{' before body");
+        let body = self.block()?;
+        Ok(Stmt::Fun(FunStmt::new(name, parameters, body)))
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserError> {

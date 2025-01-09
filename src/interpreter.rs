@@ -60,6 +60,7 @@ impl Interpreter {
             Stmt::Block(x) => self.execute(x),
             Stmt::If(x) => self.execute(x),
             Stmt::While(x) => self.execute(x),
+            Stmt::Fun(x) => self.execute(x),
         }
     }
 
