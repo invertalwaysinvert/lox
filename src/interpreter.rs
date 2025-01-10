@@ -10,14 +10,13 @@ use crate::{
 #[derive(Clone)]
 pub struct Interpreter {
     pub environment: Environment,
-    pub globals: Environment,
 }
 
 impl Interpreter {
     pub fn new() -> Self {
+        let globals = Environment::new();
         Interpreter {
-            environment: Environment::new(),
-            globals: Environment::new(),
+            environment: Environment::new_with_enclosing(globals),
         }
     }
 
@@ -247,7 +246,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
     fn visit_fun_stmt(&mut self, stmt: crate::stmt::FunStmt) -> Result<LoxObject, Return> {
         let fun_name = stmt.name.lexeme.clone();
-        let function = LoxFunction::new(stmt);
+        let function = LoxFunction::new(stmt, self.environment.clone());
         self.environment
             .define(fun_name, LoxObject::Callable(Box::new(function)));
         Ok(LoxObject::None)

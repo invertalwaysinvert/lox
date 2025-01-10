@@ -19,6 +19,7 @@ pub trait LoxCallable: std::fmt::Debug {
 #[derive(Debug, Clone)]
 pub struct LoxFunction {
     pub declaration: FunStmt,
+    pub closure: Environment,
 }
 
 impl PartialOrd for LoxFunction {
@@ -34,14 +35,17 @@ impl PartialEq for LoxFunction {
 }
 
 impl LoxFunction {
-    pub fn new(declaration: FunStmt) -> Self {
-        LoxFunction { declaration }
+    pub fn new(declaration: FunStmt, closure: Environment) -> Self {
+        LoxFunction {
+            declaration,
+            closure,
+        }
     }
 }
 
 impl LoxCallable for LoxFunction {
     fn call(&self, interpreter: &mut Interpreter, arguments: Vec<LoxObject>) -> LoxObject {
-        let mut environment = Environment::new_with_enclosing(interpreter.globals.clone());
+        let mut environment = Environment::new_with_enclosing(self.closure.clone());
         for i in 0..self.arity() {
             environment.define(
                 self.declaration

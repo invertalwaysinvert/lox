@@ -17,16 +17,21 @@
 //sayhi("Vinayak", "kaushik");
 //
 
-fun highEnough(x) {
-    if (x > 5) {
-        return true;
-    } else {
-        return false;
-    }
-}
+// fun highEnough(x) {
+//     fun test() {
+//         if (x > 5) {
+//             return true;
+//         } else {
+//             return false;
+//         }
+//     }
+//     test();
+// }
+// 
+// print highEnough(6);
+// print highEnough(8);
+// print highEnough(12);
+// print highEnough(15);
+// print highEnough(2);
 
-print highEnough(6);
-print highEnough(8);
-print highEnough(12);
-print highEnough(15);
-print highEnough(2);
+4 3;
