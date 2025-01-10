@@ -1,4 +1,5 @@
 use crate::{
+    exceptions::ParserError,
     expr::{
         BinaryExpr, CallExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr,
     },
@@ -24,7 +25,12 @@ impl Parser {
         while !self.is_at_end() {
             match self.declaration() {
                 Ok(stmt) => result.push(stmt),
-                Err(_) => self.synchronize(),
+                Err(e) => {
+                    if let Some(token) = self.tokens.get(self.current) {
+                        println!("----\nLine {}\n{}\n\n", token, e.msg);
+                        self.synchronize();
+                    }
+                }
             }
         }
         Ok(result)
@@ -58,8 +64,6 @@ impl Parser {
         self.consume(TokenType::RightParen, "Expect ')' after parameters.")?;
         self.consume(TokenType::LeftBrace, "Expect '{' before body")?;
         let body = self.block()?;
-        // TODO: Maybe this is invalid vvvvv
-        self.consume(TokenType::RightBrace, "Expect '}' after body")?;
         Ok(Stmt::Fun(FunStmt::new(name, parameters, body)))
     }
 
@@ -154,7 +158,7 @@ impl Parser {
     fn if_statement(&mut self) -> Result<Stmt, ParserError> {
         self.consume(TokenType::LeftParen, "Expect '(' after if")?;
         let condition = self.expression()?;
-        self.consume(TokenType::RightParen, "Expect '(' after if")?;
+        self.consume(TokenType::RightParen, "Expect ')' after if")?;
 
         let then_branch = self.statement()?;
         let else_branch = if self.match_token(vec![TokenType::Else]) {
@@ -170,6 +174,7 @@ impl Parser {
         while !self.check(TokenType::RightBrace) && !self.is_at_end() {
             statments.push(self.declaration()?);
         }
+        self.consume(TokenType::RightBrace, "Expect '}' after body")?;
         Ok(statments)
     }
 
@@ -215,7 +220,9 @@ impl Parser {
                         name: x.name,
                         value: Box::new(value),
                     })),
-                    _ => Err(ParserError {}),
+                    _ => Err(ParserError::raise(String::from(
+                        "Don't know what I'm doing here",
+                    ))),
                 };
             };
         }
@@ -391,14 +398,14 @@ impl Parser {
                 Err(err) => return Err(err),
             };
         };
-        Err(ParserError {})
+        Err(ParserError::raise("Invalid primary expression".to_string()))
     }
 
     fn consume(&mut self, token_type: TokenType, _message: &str) -> Result<Token, ParserError> {
         if self.check(token_type) {
             Ok(self.advance())
         } else {
-            Err(ParserError {})
+            Err(ParserError::raise(_message.to_string()))
         }
     }
 
@@ -428,6 +435,3 @@ impl Parser {
         }
     }
 }
-
-#[derive(Debug)]
-pub struct ParserError {}
