@@ -66,7 +66,7 @@ impl Interpreter {
         statements: Vec<Stmt>,
         environment: Environment,
     ) -> Result<(), Return> {
-        let previous = environment.clone();
+        let previous = self.environment.clone();
         self.environment = environment;
         for stmt in statements {
             self.execute_stmt(stmt)?;
@@ -98,14 +98,14 @@ impl ExprVisitor<LoxObject> for Interpreter {
         value
     }
 
+    fn visit_literal_expr(&mut self, expr: crate::expr::LiteralExpr) -> LoxObject {
+        expr.value
+    }
+
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
         self.environment
             .get(expr.name.lexeme.clone())
             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
-    }
-
-    fn visit_literal_expr(&mut self, expr: crate::expr::LiteralExpr) -> LoxObject {
-        expr.value
     }
 
     fn visit_grouping_expr(&mut self, expr: crate::expr::GroupingExpr) -> LoxObject {

@@ -2,5 +2,16 @@ fun printFive(x) {
     print 5;
 }
 
+fun printSix() {
+print 6;
+}
+
+printSix();
 printFive(2);
-printFive(2);
+
+
+fun sayhi(x, y) {
+    print "Hi! " + x + " " + y + "!!!";
+}
+
+sayhi("Vinayak", "kaushik");
