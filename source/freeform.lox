@@ -1,17 +1,32 @@
-fun printFive(x) {
-    print 5;
+//fun printFive(x) {
+//    print 5;
+//}
+//
+//fun printSix() {
+//print 6;
+//}
+//
+//printSix();
+//printFive(2);
+//
+//
+//fun sayhi(x, y) {
+//    print "Hi! " + x + " " + y + "!!!";
+//}
+//
+//sayhi("Vinayak", "kaushik");
+//
+
+fun highEnough(x) {
+    if (x > 5) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
-fun printSix() {
-print 6;
-}
-
-printSix();
-printFive(2);
-
-
-fun sayhi(x, y) {
-    print "Hi! " + x + " " + y + "!!!";
-}
-
-sayhi("Vinayak", "kaushik");
+print highEnough(6);
+print highEnough(8);
+print highEnough(12);
+print highEnough(15);
+print highEnough(2);

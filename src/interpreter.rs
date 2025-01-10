@@ -54,11 +54,10 @@ impl Interpreter {
             _ => LoxObject::Bool(true),
         }
     }
-    pub fn interpret(mut self, statements: Vec<Stmt>) -> Result<LoxObject, Return> {
+    pub fn interpret(mut self, statements: Vec<Stmt>) {
         for statement in statements {
-            self.execute_stmt(statement)?;
+            let _ = self.execute_stmt(statement);
         }
-        Ok(LoxObject::None)
     }
 
     pub fn execute_block(
@@ -68,11 +67,15 @@ impl Interpreter {
     ) -> Result<(), Return> {
         let previous = self.environment.clone();
         self.environment = environment;
+        let mut response = Ok(());
         for stmt in statements {
-            self.execute_stmt(stmt)?;
+            if let Err(x) = self.execute_stmt(stmt) {
+                response = Err(x);
+                break;
+            }
         }
         self.environment = previous;
-        Ok(())
+        response
     }
 }
 
@@ -168,12 +171,10 @@ impl ExprVisitor<LoxObject> for Interpreter {
             if arguments.len() != function.arity() as usize {
                 panic!("Unexpected number of arguments received");
             }
-            function.call(self, arguments);
+            return function.call(self, arguments);
         } else {
             panic!("Expression not of type LoxCallable")
         }
-
-        LoxObject::None
     }
 }
 
