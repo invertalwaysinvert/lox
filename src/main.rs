@@ -2,6 +2,8 @@ use std::io;
 use std::io::Write;
 use std::{env, fs, process::exit};
 
+use resolver::Resolver;
+
 pub mod callable;
 pub mod environment;
 pub mod exceptions;
@@ -41,10 +43,12 @@ fn run(source: &str) {
     let result = obj.scan_tokens();
     // dbg!(&result);
     let mut pars = parser::Parser::new(result);
-    let result = pars.parse();
-    // dbg!(&result);
-    let intr = interpreter::Interpreter::new();
-    intr.interpret(result.unwrap());
+    let statements = pars.parse().unwrap();
+    // dbg!(&statements);
+    let mut intr = interpreter::Interpreter::new();
+    let mut resolver = Resolver::new(&mut intr);
+    resolver.resolve_statements(statements.clone());
+    intr.interpret(statements);
 }
 
 fn run_prompt() {

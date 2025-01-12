@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::{exceptions::RuntimeError, tokens::LoxObject};
+use crate::{
+    exceptions::RuntimeError,
+    tokens::{LoxObject, Token},
+};
 
 #[derive(Clone, Debug)]
 pub struct Environment {
@@ -52,5 +55,26 @@ impl Environment {
             Some(x) => (*x).get(name),
             None => Err(RuntimeError {}),
         }
+    }
+
+    pub fn get_at(&mut self, distance: usize, name: String) -> LoxObject {
+        match self.ancestor(distance).values.get(&name) {
+            Some(x) => x.clone(),
+            None => LoxObject::None,
+        }
+    }
+
+    pub fn assign_at(&mut self, distance: usize, name: Token, value: LoxObject) {
+        self.ancestor(distance).values.insert(name.lexeme, value);
+    }
+
+    fn ancestor(&mut self, distance: usize) -> &mut Environment {
+        let mut result = self;
+        for i in 0..distance {
+            if let Some(ref mut enclosing) = result.enclosing {
+                result = enclosing;
+            }
+        }
+        result
     }
 }

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::fmt::Display;
 
 use crate::tokens::{LoxObject, Token};
@@ -32,9 +33,23 @@ pub enum Expr {
 impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Literal(x) => write!(f, "{}", x.value),
-            Self::Grouping(x) => write!(f, "( group {} )", x.expression),
-            _ => write!(f, ""),
+            Self::Literal(x) => write!(f, "Literal({})", x.value),
+            Self::Grouping(x) => write!(f, "Group({})", x.expression),
+            Self::Binary(x) => write!(f, "Binary({} {} {})", x.left, x.operator, x.right),
+            Self::Unary(x) => write!(f, "Unary({} {})", x.operator, x.right),
+            Self::Variable(x) => write!(f, "Var({})", x.name),
+            Self::Assign(x) => write!(f, "Assign({} = {})", x.name, x.value),
+            Self::Logical(x) => write!(f, "Logical({} {} {})", x.left, x.operator, x.right),
+            Self::Call(x) => write!(
+                f,
+                "Call({} ({}))",
+                x.callee,
+                x.arguments
+                    .iter()
+                    .map(|arg| arg.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
         }
     }
 }
@@ -124,6 +139,12 @@ pub struct VariableExpr {
     pub name: Token,
 }
 
+impl fmt::Display for VariableExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: {}", self.name.lexeme)
+    }
+}
+
 impl VariableExpr {
     pub fn new(name: Token) -> Self {
         VariableExpr { name }
@@ -140,6 +161,12 @@ impl<T> ExprVisitorAcceptor<T> for VariableExpr {
 pub struct AssignExpr {
     pub name: Token,
     pub value: Box<Expr>,
+}
+
+impl Display for AssignExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: {}, value: {}", self.name, *self.value)
+    }
 }
 
 impl AssignExpr {

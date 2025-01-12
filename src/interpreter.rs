@@ -1,15 +1,18 @@
+use std::collections::HashMap;
+
 use crate::{
     callable::{LoxCallable, LoxFunction},
     environment::Environment,
     exceptions::Return,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
     stmt::{Stmt, StmtVisitor, StmtVisitorAcceptor},
-    tokens::{LoxObject, TokenType},
+    tokens::{LoxObject, Token, TokenType},
 };
 
 #[derive(Clone)]
 pub struct Interpreter {
     pub environment: Environment,
+    pub locals: HashMap<String, usize>,
 }
 
 impl Interpreter {
@@ -17,6 +20,7 @@ impl Interpreter {
         let globals = Environment::new();
         Interpreter {
             environment: Environment::new_with_enclosing(globals),
+            locals: HashMap::new(),
         }
     }
 
@@ -59,6 +63,10 @@ impl Interpreter {
         }
     }
 
+    pub fn resolve(&mut self, expr: Token, depth: usize) {
+        self.locals.insert(expr.to_string(), depth);
+    }
+
     pub fn execute_block(
         &mut self,
         statements: Vec<Stmt>,
@@ -75,6 +83,19 @@ impl Interpreter {
         }
         self.environment = previous;
         response
+    }
+
+    fn lookup_variable(&mut self, name: Token, expr: crate::expr::VariableExpr) -> LoxObject {
+        match self.locals.get(&expr.to_string()) {
+            Some(x) => {
+                self.environment.get_at(*x, name.lexeme)
+                // self
+                //             .environment
+                //             .get(expr.name.lexeme.clone())
+                //             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
+            }
+            None => self.environment.get(name.lexeme).unwrap(),
+        }
     }
 }
 
@@ -95,8 +116,13 @@ where
 
 impl ExprVisitor<LoxObject> for Interpreter {
     fn visit_assign_expr(&mut self, expr: crate::expr::AssignExpr) -> LoxObject {
-        let value = self.evaluate_expr(*expr.value);
-        self.environment.assign(expr.name.lexeme, value.clone());
+        let value = self.evaluate_expr(*expr.value.clone());
+
+        if let Some(distance) = self.locals.get(&expr.to_string()) {
+            self.environment
+                .assign_at(*distance, expr.name, value.clone())
+        }
+
         value
     }
 
@@ -105,9 +131,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
-        self.environment
-            .get(expr.name.lexeme.clone())
-            .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
+        self.lookup_variable(expr.name.clone(), expr)
     }
 
     fn visit_grouping_expr(&mut self, expr: crate::expr::GroupingExpr) -> LoxObject {

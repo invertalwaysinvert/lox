@@ -7,13 +7,13 @@ use crate::{
     tokens::Token,
 };
 
-pub struct Resolver {
-    interpreter: Interpreter,
+pub struct Resolver<'a> {
+    interpreter: &'a mut Interpreter,
     scopes: Vec<HashMap<String, bool>>,
 }
 
-impl Resolver {
-    fn new(interpreter: Interpreter) -> Resolver {
+impl<'a> Resolver<'a> {
+    pub fn new(interpreter: &'a mut Interpreter) -> Resolver {
         Resolver {
             interpreter,
             scopes: Vec::new(),
@@ -28,29 +28,29 @@ impl Resolver {
         self.scopes.pop();
     }
 
-    fn declare(&mut self, name: Token) {
+    fn declare(&mut self, name: &Token) {
         if self.scopes.is_empty() {
             return;
         }
         if let Some(innermost) = self.scopes.last_mut() {
-            innermost.insert(name.lexeme, false);
+            innermost.insert(name.lexeme.clone(), false);
         }
     }
 
-    fn define(&mut self, name: Token) {
+    fn define(&mut self, name: &Token) {
         if self.scopes.is_empty() {
             return;
         }
         if let Some(innermost) = self.scopes.last_mut() {
-            innermost.insert(name.lexeme, true);
+            innermost.insert(name.lexeme.clone(), true);
         }
     }
 
     fn resolve_local(&mut self, expr: Expr, name: Token) {
-        for (i, scope) in self.scopes.into_iter().rev().enumerate() {
+        for (i, scope) in self.scopes.clone().into_iter().rev().enumerate() {
             if scope.contains_key(&name.lexeme) {
-                // TODO: Check where this is declared vvv
-                self.interpreter.resolve(expr, self.scopes.len() - 1 - i);
+                self.interpreter
+                    .resolve(name.clone(), self.scopes.len() - 1 - i);
                 return;
             };
         }
@@ -85,38 +85,39 @@ impl Resolver {
     fn resolve_function(&mut self, function: FunStmt) {
         self.begin_scope();
         for param in function.params {
-            self.declare(param);
-            self.define(param);
+            self.declare(&param);
+            self.define(&param);
         }
         self.resolve_statements(function.body);
         self.end_scope();
     }
 }
 
-impl Resolver
+impl<'a> Resolver<'a>
 where
-    Resolver: ExprVisitor<()>,
+    Resolver<'a>: ExprVisitor<()>,
 {
     pub fn resolve_expr<A: ExprVisitorAcceptor<()>>(&mut self, expr: A) {
         expr.accept(self)
     }
 }
 
-impl Resolver
+impl<'a> Resolver<'a>
 where
-    Resolver: StmtVisitor<()>,
+    Resolver<'a>: StmtVisitor<()>,
 {
     pub fn resolve_statement<A: StmtVisitorAcceptor<()>>(&mut self, statement: A) {
-        statement.accept(self);
+        let _ = statement.accept(self);
     }
-    fn resolve_statements(&self, statements: Vec<Stmt>) {
+
+    pub fn resolve_statements(&mut self, statements: Vec<Stmt>) {
         for statement in statements {
             self.execute_stmt(statement)
         }
     }
 }
 
-impl StmtVisitor<()> for Resolver {
+impl<'a> StmtVisitor<()> for Resolver<'a> {
     fn visit_block_stmt(
         &mut self,
         stmt: crate::stmt::BlockStmt,
@@ -131,11 +132,11 @@ impl StmtVisitor<()> for Resolver {
         &mut self,
         stmt: crate::stmt::VarStmt,
     ) -> Result<(), crate::exceptions::Return> {
-        self.declare(stmt.name);
+        self.declare(&stmt.name);
         if let Some(expr) = stmt.initializer {
             self.evaluate_expr(expr)
         };
-        self.define(stmt.name);
+        self.define(&stmt.name);
         Ok(())
     }
 
@@ -143,8 +144,8 @@ impl StmtVisitor<()> for Resolver {
         &mut self,
         stmt: crate::stmt::FunStmt,
     ) -> Result<(), crate::exceptions::Return> {
-        self.declare(stmt.name);
-        self.define(stmt.name);
+        self.declare(&stmt.name);
+        self.define(&stmt.name);
         self.resolve_function(stmt);
         Ok(())
     }
@@ -163,8 +164,8 @@ impl StmtVisitor<()> for Resolver {
     ) -> Result<(), crate::exceptions::Return> {
         self.evaluate_expr(stmt.condition);
         self.execute_stmt(*stmt.then_branch);
-        if let Some(elseBranch) = *stmt.else_branch {
-            self.execute_stmt(elseBranch);
+        if let Some(else_branch) = *stmt.else_branch {
+            self.execute_stmt(else_branch);
         }
         Ok(())
     }
@@ -197,19 +198,19 @@ impl StmtVisitor<()> for Resolver {
     }
 }
 
-impl ExprVisitor<()> for Resolver {
+impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) {
         if let Some(innermost) = self.scopes.last() {
             if let Some(false) = innermost.get(&expr.name.lexeme) {
                 panic!("Can't read local variable in it's own initializer");
             }
         }
-        self.resolve_local(Expr::Variable(expr), expr.name);
+        self.resolve_local(Expr::Variable(expr.clone()), expr.name);
     }
 
     fn visit_assign_expr(&mut self, expr: crate::expr::AssignExpr) {
-        self.evaluate_expr(*expr.value);
-        self.resolve_local(Expr::Assign(expr), expr.name);
+        self.evaluate_expr(*expr.value.clone());
+        self.resolve_local(Expr::Assign(expr.clone()), expr.name);
     }
 
     fn visit_binary_expr(&mut self, expr: crate::expr::BinaryExpr) {
@@ -229,7 +230,7 @@ impl ExprVisitor<()> for Resolver {
         self.evaluate_expr(*expr.expression);
     }
 
-    fn visit_literal_expr(&mut self, expr: crate::expr::LiteralExpr) {}
+    fn visit_literal_expr(&mut self, _expr: crate::expr::LiteralExpr) {}
 
     fn visit_logical_expr(&mut self, expr: crate::expr::LogicalExpr) {
         self.evaluate_expr(*expr.left);
