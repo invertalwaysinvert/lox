@@ -17,17 +17,19 @@
 //sayhi("Vinayak", "kaushik");
 //
 
-fun highEnough(x) {
-    fun test() {
-        if (x > 5) {
+
+fun beast(y) {
+    fun test(x) {
+        if (x > 5 * y) {
             return true;
         } else {
             return false;
         }
     }
-    return test();
+    return test;
 }
 
+var highEnough = beast(2);
 print highEnough(6);
 print highEnough(8);
 print highEnough(12);
