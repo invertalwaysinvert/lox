@@ -7,9 +7,16 @@ use crate::{
     tokens::Token,
 };
 
+#[derive(Clone)]
+enum FunctionType {
+    None,
+    Function,
+}
+
 pub struct Resolver<'a> {
     interpreter: &'a mut Interpreter,
     scopes: Vec<HashMap<String, bool>>,
+    current_function: FunctionType,
 }
 
 impl<'a> Resolver<'a> {
@@ -17,6 +24,7 @@ impl<'a> Resolver<'a> {
         Resolver {
             interpreter,
             scopes: Vec::new(),
+            current_function: FunctionType::None,
         }
     }
 
@@ -82,7 +90,9 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_function(&mut self, function: FunStmt) {
+    fn resolve_function(&mut self, function: FunStmt, function_type: FunctionType) {
+        let enclosing_function = self.current_function.clone();
+        self.current_function = function_type;
         self.begin_scope();
         for param in function.params {
             self.declare(&param);
@@ -90,6 +100,7 @@ impl<'a> Resolver<'a> {
         }
         self.resolve_statements(function.body);
         self.end_scope();
+        self.current_function = enclosing_function;
     }
 }
 
@@ -146,7 +157,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
     ) -> Result<(), crate::exceptions::Return> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
-        self.resolve_function(stmt);
+        self.resolve_function(stmt, FunctionType::Function);
         Ok(())
     }
 
@@ -182,6 +193,11 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         &mut self,
         stmt: crate::stmt::ReturnStmt,
     ) -> Result<(), crate::exceptions::Return> {
+        match self.current_function {
+            FunctionType::None => panic!("Can't return from top level"),
+            FunctionType::Function => (),
+        }
+
         if let Some(value) = *stmt.value {
             self.evaluate_expr(value);
         }
