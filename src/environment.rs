@@ -70,7 +70,7 @@ impl Environment {
 
     fn ancestor(&mut self, distance: usize) -> &mut Environment {
         let mut result = self;
-        for i in 0..distance {
+        for _ in 0..distance {
             if let Some(ref mut enclosing) = result.enclosing {
                 result = enclosing;
             }

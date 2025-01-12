@@ -5,6 +5,7 @@ use std::{env, fs, process::exit};
 use resolver::Resolver;
 
 pub mod callable;
+pub mod class;
 pub mod environment;
 pub mod exceptions;
 pub mod expr;

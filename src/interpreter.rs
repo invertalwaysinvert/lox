@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     callable::{LoxCallable, LoxFunction},
+    class::LoxClass,
     environment::Environment,
     exceptions::Return,
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
@@ -47,6 +48,7 @@ impl Interpreter {
             Stmt::While(x) => self.execute(x),
             Stmt::Fun(x) => self.execute(x),
             Stmt::Return(x) => self.execute(x),
+            Stmt::Class(x) => self.execute(x),
         }
     }
 
@@ -194,7 +196,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
             if arguments.len() != function.arity() as usize {
                 panic!("Unexpected number of arguments received");
             }
-            return function.call(self, arguments);
+            function.call(self, arguments)
         } else {
             panic!("Expression not of type LoxCallable")
         }
@@ -282,5 +284,14 @@ impl StmtVisitor<LoxObject> for Interpreter {
             output = self.evaluate_expr(value)
         }
         Err(Return { value: output })
+    }
+
+    fn visit_class_stmt(&mut self, stmt: crate::stmt::ClassStmt) -> Result<LoxObject, Return> {
+        self.environment
+            .define(stmt.name.lexeme.clone(), LoxObject::None);
+        let class = LoxClass::new(stmt.name.lexeme.clone());
+        self.environment
+            .assign(stmt.name.lexeme, LoxObject::Class(class));
+        Ok(LoxObject::None)
     }
 }

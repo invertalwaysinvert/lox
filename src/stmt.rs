@@ -11,6 +11,7 @@ pub trait StmtVisitor<T> {
     fn visit_while_stmt(&mut self, stmt: WhileStmt) -> Result<T, Return>;
     fn visit_fun_stmt(&mut self, stmt: FunStmt) -> Result<T, Return>;
     fn visit_return_stmt(&mut self, stmt: ReturnStmt) -> Result<T, Return>;
+    fn visit_class_stmt(&mut self, stmt: ClassStmt) -> Result<T, Return>;
 }
 
 pub trait StmtVisitorAcceptor<T> {
@@ -27,6 +28,7 @@ pub enum Stmt {
     While(WhileStmt),
     Fun(FunStmt),
     Return(ReturnStmt),
+    Class(ClassStmt),
 }
 
 impl Display for Stmt {
@@ -54,6 +56,9 @@ impl Display for Stmt {
                 write!(f, "{:?}", x)
             }
             Self::Return(x) => {
+                write!(f, "{:?}", x)
+            }
+            Self::Class(x) => {
                 write!(f, "{:?}", x)
             }
         }
@@ -219,6 +224,25 @@ impl ReturnStmt {
 impl<T> StmtVisitorAcceptor<T> for ReturnStmt {
     fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
         let output = visitor.visit_return_stmt(self.clone())?;
+        Ok(output)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ClassStmt {
+    pub name: Token,
+    pub methods: Vec<Stmt>,
+}
+
+impl ClassStmt {
+    pub fn new(name: Token, methods: Vec<Stmt>) -> Self {
+        ClassStmt { name, methods }
+    }
+}
+
+impl<T> StmtVisitorAcceptor<T> for ClassStmt {
+    fn accept(&self, visitor: &mut impl StmtVisitor<T>) -> Result<T, Return> {
+        let output = visitor.visit_class_stmt(self.clone())?;
         Ok(output)
     }
 }

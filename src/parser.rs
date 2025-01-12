@@ -5,7 +5,8 @@ use crate::{
     },
     logger::error_token,
     stmt::{
-        BlockStmt, ExpressionStmt, FunStmt, IfStmt, PrintStmt, ReturnStmt, Stmt, VarStmt, WhileStmt,
+        BlockStmt, ClassStmt, ExpressionStmt, FunStmt, IfStmt, PrintStmt, ReturnStmt, Stmt,
+        VarStmt, WhileStmt,
     },
     tokens::{LoxObject, Token, TokenType},
 };
@@ -37,13 +38,27 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParserError> {
-        if self.match_token(vec![TokenType::Fun]) {
+        if self.match_token(vec![TokenType::Class]) {
+            self.class_declaration()
+        } else if self.match_token(vec![TokenType::Fun]) {
             self.function("function")
         } else if self.match_token(vec![TokenType::Var]) {
             self.variable_declaration()
         } else {
             self.statement()
         }
+    }
+
+    fn class_declaration(&mut self) -> Result<Stmt, ParserError> {
+        let name = self.consume(TokenType::Identifier, "Expect class name.")?;
+        self.consume(TokenType::LeftBrace, "Expect '{' before class body.")?;
+
+        let mut methods = Vec::new();
+        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+            methods.push(self.function("function")?)
+        }
+        self.consume(TokenType::RightBrace, "Expect '}' after class body.")?;
+        Ok(Stmt::Class(ClassStmt::new(name, methods)))
     }
 
     fn function(&mut self, kind: &str) -> Result<Stmt, ParserError> {

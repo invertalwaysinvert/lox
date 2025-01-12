@@ -4,7 +4,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-use crate::callable::LoxFunction;
+use crate::{callable::LoxFunction, class::LoxClass};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -42,6 +42,7 @@ pub enum LoxObject {
     Bool(bool),
     None,
     Callable(Box<LoxFunction>),
+    Class(LoxClass),
 }
 
 impl PartialOrd for LoxObject {
@@ -79,6 +80,7 @@ impl Clone for LoxObject {
             Self::Bool(x) => LoxObject::Bool(*x),
             Self::None => LoxObject::None,
             Self::Callable(x) => LoxObject::Callable(Box::new(*x.clone())),
+            Self::Class(x) => LoxObject::Class(x.clone()),
         }
     }
 }
@@ -134,6 +136,7 @@ impl Display for LoxObject {
             LoxObject::Number(x) => write!(f, "{}", x),
             LoxObject::String(x) => write!(f, "{}", x),
             LoxObject::Callable(_x) => write!(f, "<loxFunction>"),
+            LoxObject::Class(x) => write!(f, "<loxClass {}>", x.name),
         }
     }
 }

@@ -54,7 +54,7 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_local(&mut self, expr: Expr, name: Token) {
+    fn resolve_local(&mut self, _expr: Expr, name: Token) {
         for (i, scope) in self.scopes.clone().into_iter().rev().enumerate() {
             if scope.contains_key(&name.lexeme) {
                 self.interpreter
@@ -87,6 +87,7 @@ impl<'a> Resolver<'a> {
             Stmt::While(x) => self.resolve_statement(x),
             Stmt::Fun(x) => self.resolve_statement(x),
             Stmt::Return(x) => self.resolve_statement(x),
+            Stmt::Class(x) => self.resolve_statement(x),
         }
     }
 
@@ -210,6 +211,15 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
     ) -> Result<(), crate::exceptions::Return> {
         self.evaluate_expr(stmt.condition);
         self.execute_stmt(*stmt.body);
+        Ok(())
+    }
+
+    fn visit_class_stmt(
+        &mut self,
+        stmt: crate::stmt::ClassStmt,
+    ) -> Result<(), crate::exceptions::Return> {
+        self.declare(&stmt.name);
+        self.define(&stmt.name);
         Ok(())
     }
 }

@@ -47,3 +47,11 @@ showA();
 var a = "block";
 showA();
 }
+
+class test {
+    toast() {
+        print 5;
+    }
+}
+
+print test;
