@@ -197,6 +197,8 @@ impl ExprVisitor<LoxObject> for Interpreter {
                 panic!("Unexpected number of arguments received");
             }
             function.call(self, arguments)
+        } else if let LoxObject::Class(class) = callee {
+            class.call(self, arguments)
         } else {
             panic!("Expression not of type LoxCallable")
         }

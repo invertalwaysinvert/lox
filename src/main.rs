@@ -9,6 +9,7 @@ pub mod class;
 pub mod environment;
 pub mod exceptions;
 pub mod expr;
+pub mod instance;
 pub mod interpreter;
 pub mod logger;
 pub mod parser;
