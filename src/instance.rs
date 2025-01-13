@@ -1,15 +1,33 @@
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
-use crate::class::LoxClass;
+use crate::{
+    class::LoxClass,
+    tokens::{LoxObject, Token},
+};
 
 #[derive(Clone, Debug)]
 pub struct LoxInstance {
     pub class: LoxClass,
+    pub fields: HashMap<String, LoxObject>,
 }
 
 impl LoxInstance {
     pub fn new(class: LoxClass) -> Self {
-        LoxInstance { class }
+        LoxInstance {
+            class,
+            fields: HashMap::new(),
+        }
+    }
+
+    pub fn get(&self, name: Token) -> LoxObject {
+        match self.fields.get(&name.lexeme) {
+            Some(x) => x.clone(),
+            None => panic!("Undefined property {}.", name.lexeme),
+        }
+    }
+
+    pub fn set(&mut self, name: Token, value: LoxObject) {
+        self.fields.insert(name.lexeme, value);
     }
 }
 

@@ -74,6 +74,8 @@ impl<'a> Resolver<'a> {
             Expr::Assign(x) => self.resolve_expr(x),
             Expr::Logical(x) => self.resolve_expr(x),
             Expr::Call(x) => self.resolve_expr(x),
+            Expr::Get(x) => self.resolve_expr(x),
+            Expr::Set(x) => self.resolve_expr(x),
         }
     }
 
@@ -265,5 +267,14 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
 
     fn visit_unary_expr(&mut self, expr: crate::expr::UnaryExpr) {
         self.evaluate_expr(*expr.right);
+    }
+
+    fn visit_get_expr(&mut self, expr: crate::expr::GetExpr) {
+        self.evaluate_expr(*expr.object);
+    }
+
+    fn visit_set_expr(&mut self, expr: crate::expr::SetExpr) {
+        self.evaluate_expr(*expr.value);
+        self.evaluate_expr(*expr.object);
     }
 }

@@ -35,6 +35,8 @@ impl Interpreter {
             Expr::Assign(x) => self.evaluate(x),
             Expr::Logical(x) => self.evaluate(x),
             Expr::Call(x) => self.evaluate(x),
+            Expr::Get(x) => self.evaluate(x),
+            Expr::Set(x) => self.evaluate(x),
         }
     }
 
@@ -201,6 +203,28 @@ impl ExprVisitor<LoxObject> for Interpreter {
             class.call(self, arguments)
         } else {
             panic!("Expression not of type LoxCallable")
+        }
+    }
+
+    fn visit_get_expr(&mut self, expr: crate::expr::GetExpr) -> LoxObject {
+        let object = self.evaluate_expr(*expr.object);
+
+        if let LoxObject::Instance(instance) = object {
+            return instance.get(expr.name);
+        }
+
+        panic!("Only instances have properties.")
+    }
+
+    fn visit_set_expr(&mut self, expr: crate::expr::SetExpr) -> LoxObject {
+        let object = self.evaluate_expr(*expr.object);
+
+        if let LoxObject::Instance(mut instance) = object {
+            let value = self.evaluate_expr(*expr.value);
+            instance.set(expr.name, value.clone());
+            value
+        } else {
+            panic!("Only instance have fields!");
         }
     }
 }

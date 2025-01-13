@@ -1,7 +1,8 @@
 use crate::{
     exceptions::ParserError,
     expr::{
-        BinaryExpr, CallExpr, Expr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr, VariableExpr,
+        BinaryExpr, CallExpr, Expr, GetExpr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr,
+        VariableExpr,
     },
     logger::error_token,
     stmt::{
@@ -235,6 +236,9 @@ impl Parser {
                         name: x.name,
                         value: Box::new(value),
                     })),
+                    Expr::Get(x) => Ok(Expr::Set(crate::expr::SetExpr::new(
+                        *x.object, x.name, value,
+                    ))),
                     _ => Err(ParserError::raise(String::from(
                         "Don't know what I'm doing here",
                     ))),
@@ -366,6 +370,9 @@ impl Parser {
         loop {
             if self.match_token(vec![TokenType::LeftParen]) {
                 expr = self.finish_call(expr)?;
+            } else if self.match_token(vec![TokenType::Dot]) {
+                let name = self.consume(TokenType::Identifier, "Expect propert name after '.'.")?;
+                expr = Expr::Get(GetExpr::new(expr, name))
             } else {
                 break;
             }

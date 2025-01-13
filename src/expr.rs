@@ -12,6 +12,8 @@ pub trait ExprVisitor<T> {
     fn visit_assign_expr(&mut self, expr: AssignExpr) -> T;
     fn visit_logical_expr(&mut self, expr: LogicalExpr) -> T;
     fn visit_call_expr(&mut self, expr: CallExpr) -> T;
+    fn visit_get_expr(&mut self, expr: GetExpr) -> T;
+    fn visit_set_expr(&mut self, expr: SetExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -28,6 +30,8 @@ pub enum Expr {
     Assign(AssignExpr),
     Logical(LogicalExpr),
     Call(CallExpr),
+    Get(GetExpr),
+    Set(SetExpr),
 }
 
 impl Display for Expr {
@@ -40,6 +44,8 @@ impl Display for Expr {
             Self::Variable(x) => write!(f, "Var({})", x.name),
             Self::Assign(x) => write!(f, "Assign({} = {})", x.name, x.value),
             Self::Logical(x) => write!(f, "Logical({} {} {})", x.left, x.operator, x.right),
+            Self::Get(x) => write!(f, "Get({} {})", x.object, x.name),
+            Self::Set(x) => write!(f, "Set({} {} {})", x.object, x.name, x.value),
             Self::Call(x) => write!(
                 f,
                 "Call({} ({}))",
@@ -225,5 +231,46 @@ impl CallExpr {
 impl<T> ExprVisitorAcceptor<T> for CallExpr {
     fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_call_expr(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct GetExpr {
+    pub object: Box<Expr>,
+    pub name: Token,
+}
+
+impl GetExpr {
+    pub fn new(object: Expr, name: Token) -> Self {
+        GetExpr {
+            object: Box::new(object),
+            name,
+        }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for GetExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_get_expr(self.clone())
+    }
+}
+#[derive(Clone, Debug)]
+pub struct SetExpr {
+    pub object: Box<Expr>,
+    pub name: Token,
+    pub value: Box<Expr>,
+}
+
+impl SetExpr {
+    pub fn new(object: Expr, name: Token, value: Expr) -> Self {
+        SetExpr {
+            object: Box::new(object),
+            name,
+            value: Box::new(value),
+        }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for SetExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_set_expr(self.clone())
     }
 }
