@@ -49,9 +49,9 @@ showA();
 }
 
 class test {
-    toast() {
-        print 5;
+    toast(x) {
+        print x;
     }
 }
 
-print test;
+test().toast(1000);

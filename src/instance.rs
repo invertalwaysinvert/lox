@@ -21,9 +21,17 @@ impl LoxInstance {
 
     pub fn get(&self, name: Token) -> LoxObject {
         match self.fields.get(&name.lexeme) {
-            Some(x) => x.clone(),
-            None => panic!("Undefined property {}.", name.lexeme),
+            Some(x) => {
+                return x.clone();
+            }
+            None => (),
+        };
+
+        if let Some(method) = self.class.find_methods(&name.lexeme) {
+            return LoxObject::Callable(Box::new(method));
         }
+
+        panic!("Undefined property {}.", name.lexeme);
     }
 
     pub fn set(&mut self, name: Token, value: LoxObject) {

@@ -11,6 +11,7 @@ use crate::{
 enum FunctionType {
     None,
     Function,
+    Method,
 }
 
 pub struct Resolver<'a> {
@@ -199,6 +200,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         match self.current_function {
             FunctionType::None => panic!("Can't return from top level"),
             FunctionType::Function => (),
+            FunctionType::Method => (),
         }
 
         if let Some(value) = *stmt.value {
@@ -222,6 +224,14 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
     ) -> Result<(), crate::exceptions::Return> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
+
+        for method in stmt.methods {
+            if let Stmt::Fun(stmt) = method {
+                self.resolve_function(stmt, FunctionType::Method)
+            } else {
+                panic!("Invalid method found!")
+            }
+        }
         Ok(())
     }
 }

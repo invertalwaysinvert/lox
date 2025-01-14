@@ -315,7 +315,16 @@ impl StmtVisitor<LoxObject> for Interpreter {
     fn visit_class_stmt(&mut self, stmt: crate::stmt::ClassStmt) -> Result<LoxObject, Return> {
         self.environment
             .define(stmt.name.lexeme.clone(), LoxObject::None);
-        let class = LoxClass::new(stmt.name.lexeme.clone());
+        let mut methods = HashMap::new();
+        for method in stmt.methods {
+            if let Stmt::Fun(stmt) = method {
+                let function = LoxFunction::new(stmt.clone(), self.environment.clone());
+                methods.insert(stmt.name.lexeme, function);
+            } else {
+                panic!("Invalid method found {}", stmt.name.lexeme);
+            }
+        }
+        let class = LoxClass::new(stmt.name.lexeme.clone(), methods);
         self.environment
             .assign(stmt.name.lexeme, LoxObject::Class(class));
         Ok(LoxObject::None)
