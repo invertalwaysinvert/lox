@@ -331,6 +331,14 @@ impl StmtVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_class_stmt(&mut self, stmt: crate::stmt::ClassStmt) -> Result<LoxObject, Return> {
+        let mut superclass = None;
+        if let Some(superinit) = *stmt.superclass {
+            let super_exp = self.evaluate_expr(superinit);
+            match super_exp {
+                LoxObject::Class(x) => superclass = Some(x),
+                _ => panic!("Superclass must be a class."),
+            }
+        }
         self.environment
             .define(stmt.name.lexeme.clone(), LoxObject::None);
         let mut methods = HashMap::new();
@@ -346,7 +354,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
                 panic!("Invalid method found {}", stmt.name.lexeme);
             }
         }
-        let class = LoxClass::new(stmt.name.lexeme.clone(), methods);
+        let class = LoxClass::new(stmt.name.lexeme.clone(), superclass, methods);
         self.environment
             .assign(stmt.name.lexeme, LoxObject::Class(class));
         Ok(LoxObject::None)

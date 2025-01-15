@@ -56,13 +56,17 @@ class test {
 
 test().toast(1000);
 
+class Bread {
+    bacon() {
+        print 444;
+    }
+}
 
-class Cake {
+class Cake < Bread {
     taste() {
         print this.flavor;
     }
 }
 
-print this.flavor;
 
-Cake().taste();
+Cake().bacon();

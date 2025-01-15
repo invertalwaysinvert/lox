@@ -9,16 +9,34 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct LoxClass {
     pub name: String,
+    pub superclass: Box<Option<LoxClass>>,
     pub methods: HashMap<String, LoxFunction>,
 }
 
 impl LoxClass {
-    pub fn new(name: String, methods: HashMap<String, LoxFunction>) -> Self {
-        LoxClass { name, methods }
+    pub fn new(
+        name: String,
+        superclass: Option<LoxClass>,
+        methods: HashMap<String, LoxFunction>,
+    ) -> Self {
+        LoxClass {
+            name,
+            superclass: Box::new(superclass),
+            methods,
+        }
     }
 
     pub fn find_methods(&self, name: &str) -> Option<LoxFunction> {
-        self.methods.get(name).cloned()
+        match self.methods.get(name) {
+            Some(x) => Some(x.clone()),
+            None => {
+                if let Some(superclass) = *self.superclass.clone() {
+                    superclass.find_methods(name)
+                } else {
+                    None
+                }
+            }
+        }
     }
 }
 

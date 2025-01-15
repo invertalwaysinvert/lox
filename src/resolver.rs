@@ -238,6 +238,15 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
 
+        if let Some(Expr::Variable(superclass)) = *stmt.superclass.clone() {
+            if stmt.name.lexeme.eq(&superclass.name.lexeme) {
+                panic!("A class can't inherit from itself.");
+            }
+        }
+        if let Some(superclass) = *stmt.superclass {
+            self.evaluate_expr(superclass);
+        }
+
         self.begin_scope();
         self.scopes
             .last_mut()

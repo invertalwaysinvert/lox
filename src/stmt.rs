@@ -1,6 +1,10 @@
 use std::fmt::Display;
 
-use crate::{exceptions::Return, expr::Expr, tokens::Token};
+use crate::{
+    exceptions::Return,
+    expr::{Expr, VariableExpr},
+    tokens::Token,
+};
 
 pub trait StmtVisitor<T> {
     fn visit_expression_stmt(&mut self, stmt: ExpressionStmt) -> Result<T, Return>;
@@ -231,12 +235,17 @@ impl<T> StmtVisitorAcceptor<T> for ReturnStmt {
 #[derive(Clone, Debug)]
 pub struct ClassStmt {
     pub name: Token,
+    pub superclass: Box<Option<Expr>>,
     pub methods: Vec<Stmt>,
 }
 
 impl ClassStmt {
-    pub fn new(name: Token, methods: Vec<Stmt>) -> Self {
-        ClassStmt { name, methods }
+    pub fn new(name: Token, superclass: Option<Expr>, methods: Vec<Stmt>) -> Self {
+        ClassStmt {
+            name,
+            superclass: Box::new(superclass),
+            methods,
+        }
     }
 }
 
