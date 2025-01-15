@@ -18,51 +18,51 @@
 //
 
 
-//fun beast(y) {
-//    fun test(x) {
-//        if (x > 5 * y) {
-//            return true;
-//        } else {
-//            return false;
-//        }
-//    }
-//    return test;
-//}
-//
-//var highEnough = beast(2);
-//print highEnough(6);
-//print highEnough(8);
-//print highEnough(12);
-//print highEnough(15);
-//print highEnough(2);
+fun beast(y) {
+    fun test(x) {
+        if (x > 5 * y) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return test;
+}
+
+var highEnough = beast(2);
+print highEnough(6);
+print highEnough(8);
+print highEnough(12);
+print highEnough(15);
+print highEnough(2);
 
 
-//var a = "global";
-//{
-//    fun showA() {
-//        print a;
-//    }
-//
-//showA();
-//var a = "block";
-//showA();
-//}
-//
-//class test {
-//    toast(x) {
-//        print x;
-//    }
-//}
-//
-//test().toast(1000);
+var a = "global";
+{
+    fun showA() {
+        print a;
+    }
+
+showA();
+var a = "block";
+showA();
+}
+
+class test {
+    toast(x) {
+        print x;
+    }
+}
+
+test().toast(1000);
 
 
 class Cake {
     taste() {
-        var adjective = "delicious";
         print this.flavor;
     }
 }
 
-var cake = Cake();
-print cake.taste();
+print this.flavor;
+
+Cake().taste();

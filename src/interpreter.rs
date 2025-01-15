@@ -26,7 +26,6 @@ impl Interpreter {
     }
 
     fn evaluate_expr(&mut self, expr: Expr) -> LoxObject {
-        println!("{}", expr);
         match expr {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
@@ -43,7 +42,6 @@ impl Interpreter {
     }
 
     fn execute_stmt(&mut self, statement: Stmt) -> Result<LoxObject, Return> {
-        println!("{}", statement);
         match statement {
             Stmt::Expression(x) => self.execute(x),
             Stmt::Print(x) => self.execute(x),
@@ -223,7 +221,6 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_get_expr(&mut self, expr: crate::expr::GetExpr) -> LoxObject {
-        dbg!(*expr.object.clone());
         let object = self.evaluate_expr(*expr.object);
 
         if let LoxObject::Instance(instance) = object {

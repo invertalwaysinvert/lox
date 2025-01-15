@@ -14,10 +14,17 @@ enum FunctionType {
     Method,
 }
 
+#[derive(Clone)]
+enum ClassType {
+    None,
+    Class,
+}
+
 pub struct Resolver<'a> {
     interpreter: &'a mut Interpreter,
     scopes: Vec<HashMap<String, bool>>,
     current_function: FunctionType,
+    current_class: ClassType,
 }
 
 impl<'a> Resolver<'a> {
@@ -26,6 +33,7 @@ impl<'a> Resolver<'a> {
             interpreter,
             scopes: Vec::new(),
             current_function: FunctionType::None,
+            current_class: ClassType::None,
         }
     }
 
@@ -222,6 +230,9 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         &mut self,
         stmt: crate::stmt::ClassStmt,
     ) -> Result<(), crate::exceptions::Return> {
+        let enclosing_class = self.current_class.clone();
+        self.current_class = ClassType::Class;
+
         self.declare(&stmt.name);
         self.define(&stmt.name);
 
@@ -240,6 +251,8 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         }
 
         self.end_scope();
+
+        self.current_class = enclosing_class;
 
         Ok(())
     }
@@ -298,6 +311,9 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
     }
 
     fn visit_this_expr(&mut self, expr: crate::expr::ThisExpr) {
+        if let ClassType::None = self.current_class {
+            panic!("this not allowed outside a class");
+        }
         self.resolve_local(expr.name)
     }
 }

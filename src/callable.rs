@@ -51,7 +51,7 @@ impl LoxFunction {
 
 impl LoxCallable for LoxFunction {
     fn call(&self, interpreter: &mut Interpreter, arguments: Vec<LoxObject>) -> LoxObject {
-        let mut environment = Environment::new_with_enclosing(self.closure.clone());
+        let mut environment = self.closure.clone();
         for i in 0..self.arity() {
             environment.define(
                 self.declaration
