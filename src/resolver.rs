@@ -12,6 +12,7 @@ enum FunctionType {
     None,
     Function,
     Method,
+    Init,
 }
 
 #[derive(Clone)]
@@ -209,6 +210,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
             FunctionType::None => panic!("Can't return from top level"),
             FunctionType::Function => (),
             FunctionType::Method => (),
+            FunctionType::Init => panic!("Can't return from init"),
         }
 
         if let Some(value) = *stmt.value {
@@ -244,7 +246,11 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
 
         for method in stmt.methods {
             if let Stmt::Fun(stmt) = method {
-                self.resolve_function(stmt, FunctionType::Method)
+                let mut declaration = FunctionType::Method;
+                if stmt.name.lexeme.eq("init") {
+                    declaration = FunctionType::Init;
+                }
+                self.resolve_function(stmt, declaration)
             } else {
                 panic!("Invalid method found!")
             }

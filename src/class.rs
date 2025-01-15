@@ -31,14 +31,24 @@ impl Display for LoxClass {
 impl LoxCallable for LoxClass {
     fn call(
         &self,
-        _interpreter: &mut crate::interpreter::Interpreter,
-        _arguments: Vec<crate::tokens::LoxObject>,
+        interpreter: &mut crate::interpreter::Interpreter,
+        arguments: Vec<crate::tokens::LoxObject>,
     ) -> crate::tokens::LoxObject {
-        LoxObject::Instance(LoxInstance::new(self.clone()))
+        let mut instance = LoxObject::Instance(LoxInstance::new(self.clone()));
+        if let Some(init) = self.find_methods("init") {
+            instance = init
+                .bind(LoxInstance::new(self.clone()))
+                .call(interpreter, arguments);
+        }
+        instance
     }
 
     fn arity(&self) -> u32 {
-        0
+        if let Some(init) = self.find_methods("init") {
+            init.arity()
+        } else {
+            0
+        }
     }
 
     fn to_string(&self) -> String {

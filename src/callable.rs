@@ -20,6 +20,7 @@ pub trait LoxCallable: std::fmt::Debug {
 pub struct LoxFunction {
     pub declaration: FunStmt,
     pub closure: Environment,
+    pub is_init: bool,
 }
 
 impl PartialOrd for LoxFunction {
@@ -35,17 +36,18 @@ impl PartialEq for LoxFunction {
 }
 
 impl LoxFunction {
-    pub fn new(declaration: FunStmt, closure: Environment) -> Self {
+    pub fn new(declaration: FunStmt, closure: Environment, is_init: bool) -> Self {
         LoxFunction {
             declaration,
             closure,
+            is_init,
         }
     }
 
     pub fn bind(&self, instance: LoxInstance) -> Self {
         let mut environment = Environment::new_with_enclosing(self.closure.clone());
         environment.define("This this ".to_string(), LoxObject::Instance(instance));
-        LoxFunction::new(self.declaration.clone(), environment)
+        LoxFunction::new(self.declaration.clone(), environment, self.is_init)
     }
 }
 
@@ -63,10 +65,19 @@ impl LoxCallable for LoxFunction {
                 arguments.get(i as usize).unwrap().clone(),
             )
         }
-        match interpreter.execute_block(self.declaration.body.clone(), environment) {
+        let value = match interpreter.execute_block(self.declaration.body.clone(), environment) {
             Ok(_) => LoxObject::None,
-            Err(x) => x.value,
+            Err(x) => {
+                if self.is_init {
+                    return self.closure.get("This this ".to_string()).unwrap();
+                }
+                x.value
+            }
+        };
+        if self.is_init {
+            return self.closure.get("This this ".to_string()).unwrap();
         }
+        value
     }
 
     fn arity(&self) -> u32 {

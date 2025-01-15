@@ -316,7 +316,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
     fn visit_fun_stmt(&mut self, stmt: crate::stmt::FunStmt) -> Result<LoxObject, Return> {
         let fun_name = stmt.name.lexeme.clone();
-        let function = LoxFunction::new(stmt, self.environment.clone());
+        let function = LoxFunction::new(stmt, self.environment.clone(), false);
         self.environment
             .define(fun_name, LoxObject::Callable(Box::new(function)));
         Ok(LoxObject::None)
@@ -336,7 +336,11 @@ impl StmtVisitor<LoxObject> for Interpreter {
         let mut methods = HashMap::new();
         for method in stmt.methods {
             if let Stmt::Fun(stmt) = method {
-                let function = LoxFunction::new(stmt.clone(), self.environment.clone());
+                let function = LoxFunction::new(
+                    stmt.clone(),
+                    self.environment.clone(),
+                    stmt.name.lexeme.eq("init"),
+                );
                 methods.insert(stmt.name.lexeme, function);
             } else {
                 panic!("Invalid method found {}", stmt.name.lexeme);
