@@ -14,6 +14,7 @@ pub trait ExprVisitor<T> {
     fn visit_call_expr(&mut self, expr: CallExpr) -> T;
     fn visit_get_expr(&mut self, expr: GetExpr) -> T;
     fn visit_set_expr(&mut self, expr: SetExpr) -> T;
+    fn visit_this_expr(&mut self, expr: ThisExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -32,6 +33,7 @@ pub enum Expr {
     Call(CallExpr),
     Get(GetExpr),
     Set(SetExpr),
+    This(ThisExpr),
 }
 
 impl Display for Expr {
@@ -46,6 +48,7 @@ impl Display for Expr {
             Self::Logical(x) => write!(f, "Logical({} {} {})", x.left, x.operator, x.right),
             Self::Get(x) => write!(f, "Get({} {})", x.object, x.name),
             Self::Set(x) => write!(f, "Set({} {} {})", x.object, x.name, x.value),
+            Self::This(x) => write!(f, "This({})", x.name),
             Self::Call(x) => write!(
                 f,
                 "Call({} ({}))",
@@ -253,6 +256,7 @@ impl<T> ExprVisitorAcceptor<T> for GetExpr {
         visitor.visit_get_expr(self.clone())
     }
 }
+
 #[derive(Clone, Debug)]
 pub struct SetExpr {
     pub object: Box<Expr>,
@@ -272,5 +276,27 @@ impl SetExpr {
 impl<T> ExprVisitorAcceptor<T> for SetExpr {
     fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
         visitor.visit_set_expr(self.clone())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ThisExpr {
+    pub name: Token,
+}
+
+impl ThisExpr {
+    pub fn new(name: Token) -> Self {
+        ThisExpr { name }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for ThisExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_this_expr(self.clone())
+    }
+}
+
+impl fmt::Display for ThisExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: {}", self.name.lexeme)
     }
 }

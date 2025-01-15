@@ -1,8 +1,8 @@
 use crate::{
     exceptions::ParserError,
     expr::{
-        BinaryExpr, CallExpr, Expr, GetExpr, GroupingExpr, LiteralExpr, LogicalExpr, UnaryExpr,
-        VariableExpr,
+        BinaryExpr, CallExpr, Expr, GetExpr, GroupingExpr, LiteralExpr, LogicalExpr, ThisExpr,
+        UnaryExpr, VariableExpr,
     },
     logger::error_token,
     stmt::{
@@ -371,7 +371,7 @@ impl Parser {
             if self.match_token(vec![TokenType::LeftParen]) {
                 expr = self.finish_call(expr)?;
             } else if self.match_token(vec![TokenType::Dot]) {
-                let name = self.consume(TokenType::Identifier, "Expect propert name after '.'.")?;
+                let name = self.consume(TokenType::Identifier, "Expect property name after '.'")?;
                 expr = Expr::Get(GetExpr::new(expr, name))
             } else {
                 break;
@@ -409,6 +409,9 @@ impl Parser {
         }
         if self.match_token(vec![TokenType::Number, TokenType::String]) {
             return Ok(Expr::Literal(LiteralExpr::new(self.previous().literal)));
+        }
+        if self.match_token(vec![TokenType::This]) {
+            return Ok(Expr::This(ThisExpr::new(self.previous())));
         }
         if self.match_token(vec![TokenType::Identifier]) {
             return Ok(Expr::Variable(VariableExpr::new(self.previous())));

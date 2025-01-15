@@ -55,11 +55,10 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_local(&mut self, _expr: Expr, name: Token) {
+    fn resolve_local(&mut self, name: Token) {
         for (i, scope) in self.scopes.clone().into_iter().rev().enumerate() {
-            if scope.contains_key(&name.lexeme) {
-                self.interpreter
-                    .resolve(name.clone(), self.scopes.len() - 1 - i);
+            if scope.contains_key(&name.to_string()) {
+                self.interpreter.resolve(name, self.scopes.len() - 1 - i);
                 return;
             };
         }
@@ -77,6 +76,7 @@ impl<'a> Resolver<'a> {
             Expr::Call(x) => self.resolve_expr(x),
             Expr::Get(x) => self.resolve_expr(x),
             Expr::Set(x) => self.resolve_expr(x),
+            Expr::This(x) => self.resolve_expr(x),
         }
     }
 
@@ -225,6 +225,12 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         self.declare(&stmt.name);
         self.define(&stmt.name);
 
+        self.begin_scope();
+        self.scopes
+            .last_mut()
+            .unwrap()
+            .insert("This this ".to_string(), true);
+
         for method in stmt.methods {
             if let Stmt::Fun(stmt) = method {
                 self.resolve_function(stmt, FunctionType::Method)
@@ -232,6 +238,9 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
                 panic!("Invalid method found!")
             }
         }
+
+        self.end_scope();
+
         Ok(())
     }
 }
@@ -243,12 +252,12 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
                 panic!("Can't read local variable in it's own initializer");
             }
         }
-        self.resolve_local(Expr::Variable(expr.clone()), expr.name);
+        self.resolve_local(expr.name);
     }
 
     fn visit_assign_expr(&mut self, expr: crate::expr::AssignExpr) {
         self.evaluate_expr(*expr.value.clone());
-        self.resolve_local(Expr::Assign(expr.clone()), expr.name);
+        self.resolve_local(expr.name);
     }
 
     fn visit_binary_expr(&mut self, expr: crate::expr::BinaryExpr) {
@@ -286,5 +295,9 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_set_expr(&mut self, expr: crate::expr::SetExpr) {
         self.evaluate_expr(*expr.value);
         self.evaluate_expr(*expr.object);
+    }
+
+    fn visit_this_expr(&mut self, expr: crate::expr::ThisExpr) {
+        self.resolve_local(expr.name)
     }
 }

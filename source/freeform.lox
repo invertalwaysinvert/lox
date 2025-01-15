@@ -37,21 +37,32 @@
 //print highEnough(2);
 
 
-var a = "global";
-{
-    fun showA() {
-        print a;
-    }
+//var a = "global";
+//{
+//    fun showA() {
+//        print a;
+//    }
+//
+//showA();
+//var a = "block";
+//showA();
+//}
+//
+//class test {
+//    toast(x) {
+//        print x;
+//    }
+//}
+//
+//test().toast(1000);
 
-showA();
-var a = "block";
-showA();
+
+class Cake {
+    taste() {
+        var adjective = "delicious";
+        print this.flavor;
+    }
 }
 
-class test {
-    toast(x) {
-        print x;
-    }
-}
-
-test().toast(1000);
+var cake = Cake();
+print cake.taste();

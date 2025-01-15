@@ -26,6 +26,7 @@ impl Interpreter {
     }
 
     fn evaluate_expr(&mut self, expr: Expr) -> LoxObject {
+        println!("{}", expr);
         match expr {
             Expr::Binary(x) => self.evaluate(x),
             Expr::Grouping(x) => self.evaluate(x),
@@ -37,10 +38,12 @@ impl Interpreter {
             Expr::Call(x) => self.evaluate(x),
             Expr::Get(x) => self.evaluate(x),
             Expr::Set(x) => self.evaluate(x),
+            Expr::This(x) => self.evaluate(x),
         }
     }
 
     fn execute_stmt(&mut self, statement: Stmt) -> Result<LoxObject, Return> {
+        println!("{}", statement);
         match statement {
             Stmt::Expression(x) => self.execute(x),
             Stmt::Print(x) => self.execute(x),
@@ -89,16 +92,29 @@ impl Interpreter {
         response
     }
 
-    fn lookup_variable(&mut self, name: Token, expr: crate::expr::VariableExpr) -> LoxObject {
+    fn lookup_variable(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
         match self.locals.get(&expr.to_string()) {
             Some(x) => {
-                self.environment.get_at(*x, name.lexeme)
+                self.environment.get_at(*x, expr.name.lexeme)
                 // self
                 //             .environment
                 //             .get(expr.name.lexeme.clone())
                 //             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
             }
-            None => self.environment.get(name.lexeme).unwrap(),
+            None => self.environment.get(expr.name.lexeme).unwrap(),
+        }
+    }
+
+    fn lookup_this(&mut self, expr: crate::expr::ThisExpr) -> LoxObject {
+        match self.locals.get(&expr.name.to_string()) {
+            Some(x) => {
+                self.environment.get_at(*x, expr.name.to_string())
+                // self
+                //             .environment
+                //             .get(expr.name.lexeme.clone())
+                //             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
+            }
+            None => self.environment.get(expr.name.to_string()).unwrap(),
         }
     }
 }
@@ -135,7 +151,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
-        self.lookup_variable(expr.name.clone(), expr)
+        self.lookup_variable(expr)
     }
 
     fn visit_grouping_expr(&mut self, expr: crate::expr::GroupingExpr) -> LoxObject {
@@ -207,6 +223,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_get_expr(&mut self, expr: crate::expr::GetExpr) -> LoxObject {
+        dbg!(*expr.object.clone());
         let object = self.evaluate_expr(*expr.object);
 
         if let LoxObject::Instance(instance) = object {
@@ -226,6 +243,10 @@ impl ExprVisitor<LoxObject> for Interpreter {
         } else {
             panic!("Only instance have fields!");
         }
+    }
+
+    fn visit_this_expr(&mut self, expr: crate::expr::ThisExpr) -> LoxObject {
+        self.lookup_this(expr)
     }
 }
 

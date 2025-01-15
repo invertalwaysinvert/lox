@@ -65,7 +65,9 @@ impl Environment {
     }
 
     pub fn assign_at(&mut self, distance: usize, name: Token, value: LoxObject) {
-        self.ancestor(distance).values.insert(name.lexeme, value);
+        self.ancestor(distance)
+            .values
+            .insert(name.to_string(), value);
     }
 
     fn ancestor(&mut self, distance: usize) -> &mut Environment {

@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 
 use crate::{
-    environment::Environment, interpreter::Interpreter, stmt::FunStmt, tokens::LoxObject,
-    utils::Clock,
+    environment::Environment, instance::LoxInstance, interpreter::Interpreter, stmt::FunStmt,
+    tokens::LoxObject, utils::Clock,
 };
 
 pub enum LoxCallableType {
@@ -40,6 +40,12 @@ impl LoxFunction {
             declaration,
             closure,
         }
+    }
+
+    pub fn bind(&self, instance: LoxInstance) -> Self {
+        let mut environment = Environment::new_with_enclosing(self.closure.clone());
+        environment.define("This this ".to_string(), LoxObject::Instance(instance));
+        LoxFunction::new(self.declaration.clone(), environment)
     }
 }
 

@@ -28,7 +28,10 @@ impl LoxInstance {
         };
 
         if let Some(method) = self.class.find_methods(&name.lexeme) {
-            return LoxObject::Callable(Box::new(method));
+            let method = method.bind(self.clone()); // TODO: Should not be cloning here, methods are now
+                                                    // unattached from the instances
+            let method = LoxObject::Callable(Box::new(method));
+            return method;
         }
 
         panic!("Undefined property {}.", name.lexeme);
