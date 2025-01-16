@@ -10,6 +10,7 @@ pub mod parser;
 pub mod resolver;
 pub mod scanner;
 pub mod stmt;
+pub mod testing_utils;
 pub mod tokens;
 pub mod utils;
 
