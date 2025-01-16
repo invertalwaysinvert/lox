@@ -19,6 +19,7 @@ enum FunctionType {
 enum ClassType {
     None,
     Class,
+    Subclass,
 }
 
 pub struct Resolver<'a> {
@@ -86,6 +87,7 @@ impl<'a> Resolver<'a> {
             Expr::Get(x) => self.resolve_expr(x),
             Expr::Set(x) => self.resolve_expr(x),
             Expr::This(x) => self.resolve_expr(x),
+            Expr::Super(x) => self.resolve_expr(x),
         }
     }
 
@@ -243,8 +245,14 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
                 panic!("A class can't inherit from itself.");
             }
         }
-        if let Some(superclass) = *stmt.superclass {
+        if let Some(superclass) = *stmt.superclass.clone() {
+            self.current_class = ClassType::Subclass;
             self.evaluate_expr(superclass);
+            self.begin_scope();
+            self.scopes
+                .last_mut()
+                .unwrap()
+                .insert("Super super ".to_string(), true);
         }
 
         self.begin_scope();
@@ -266,6 +274,10 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
         }
 
         self.end_scope();
+
+        if let Some(superclass) = *stmt.superclass {
+            self.end_scope();
+        }
 
         self.current_class = enclosing_class;
 
@@ -329,6 +341,15 @@ impl<'a> ExprVisitor<()> for Resolver<'a> {
         if let ClassType::None = self.current_class {
             panic!("this not allowed outside a class");
         }
-        self.resolve_local(expr.name)
+        self.resolve_local(expr.name);
+    }
+
+    fn visit_super_expr(&mut self, expr: crate::expr::SuperExpr) {
+        match self.current_class {
+            ClassType::None => panic!("Can't use 'super' outside of a class."),
+            ClassType::Class => panic!("Can't use 'super' in a class with no subclass"),
+            ClassType::Subclass => (),
+        }
+        self.resolve_local(expr.keyword);
     }
 }

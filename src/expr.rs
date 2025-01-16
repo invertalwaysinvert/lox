@@ -15,6 +15,7 @@ pub trait ExprVisitor<T> {
     fn visit_get_expr(&mut self, expr: GetExpr) -> T;
     fn visit_set_expr(&mut self, expr: SetExpr) -> T;
     fn visit_this_expr(&mut self, expr: ThisExpr) -> T;
+    fn visit_super_expr(&mut self, expr: SuperExpr) -> T;
 }
 
 pub trait ExprVisitorAcceptor<T> {
@@ -34,6 +35,7 @@ pub enum Expr {
     Get(GetExpr),
     Set(SetExpr),
     This(ThisExpr),
+    Super(SuperExpr),
 }
 
 impl Display for Expr {
@@ -49,6 +51,7 @@ impl Display for Expr {
             Self::Get(x) => write!(f, "Get({} {})", x.object, x.name),
             Self::Set(x) => write!(f, "Set({} {} {})", x.object, x.name, x.value),
             Self::This(x) => write!(f, "This({})", x.name),
+            Self::Super(x) => write!(f, "Super({} {})", x.keyword, x.method),
             Self::Call(x) => write!(
                 f,
                 "Call({} ({}))",
@@ -300,3 +303,26 @@ impl fmt::Display for ThisExpr {
         write!(f, "name: {}", self.name.lexeme)
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct SuperExpr {
+    pub keyword: Token,
+    pub method: Token,
+}
+
+impl SuperExpr {
+    pub fn new(keyword: Token, method: Token) -> Self {
+        SuperExpr { keyword, method }
+    }
+}
+impl<T> ExprVisitorAcceptor<T> for SuperExpr {
+    fn accept(&self, visitor: &mut impl ExprVisitor<T>) -> T {
+        visitor.visit_super_expr(self.clone())
+    }
+}
+//
+// impl fmt::Display for SuperExpr {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "super keyword: {}", self.keyword.lexeme)
+//     }
+// }

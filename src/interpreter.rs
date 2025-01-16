@@ -38,6 +38,7 @@ impl Interpreter {
             Expr::Get(x) => self.evaluate(x),
             Expr::Set(x) => self.evaluate(x),
             Expr::This(x) => self.evaluate(x),
+            Expr::Super(x) => self.evaluate(x),
         }
     }
 
@@ -245,6 +246,28 @@ impl ExprVisitor<LoxObject> for Interpreter {
     fn visit_this_expr(&mut self, expr: crate::expr::ThisExpr) -> LoxObject {
         self.lookup_this(expr)
     }
+
+    fn visit_super_expr(&mut self, expr: crate::expr::SuperExpr) -> LoxObject {
+        if let Some(distance) = self.locals.get(&expr.keyword.lexeme) {
+            let superclass = self
+                .environment
+                .get_at(*distance, "Super super ".to_string());
+
+            let object = self
+                .environment
+                .get_at(distance - 1, "This this ".to_string());
+            if let LoxObject::Class(func) = superclass {
+                if let Some(method) = func.find_methods(&expr.method.lexeme) {
+                    if let LoxObject::Instance(instance) = object {
+                        return LoxObject::Callable(Box::new(method.bind(instance)));
+                    }
+                } else {
+                    panic!("Undefined property '{}'", expr.keyword.lexeme);
+                }
+            }
+        }
+        LoxObject::None
+    }
 }
 
 impl Interpreter
@@ -332,7 +355,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
     fn visit_class_stmt(&mut self, stmt: crate::stmt::ClassStmt) -> Result<LoxObject, Return> {
         let mut superclass = None;
-        if let Some(superinit) = *stmt.superclass {
+        if let Some(superinit) = *stmt.superclass.clone() {
             let super_exp = self.evaluate_expr(superinit);
             match super_exp {
                 LoxObject::Class(x) => superclass = Some(x),
@@ -341,6 +364,12 @@ impl StmtVisitor<LoxObject> for Interpreter {
         }
         self.environment
             .define(stmt.name.lexeme.clone(), LoxObject::None);
+        if let Some(superinit) = *stmt.superclass.clone() {
+            let super_exp = self.evaluate_expr(superinit);
+            self.environment = Environment::new_with_enclosing(self.environment.clone());
+            self.environment
+                .define("Super super ".to_string(), super_exp);
+        }
         let mut methods = HashMap::new();
         for method in stmt.methods {
             if let Stmt::Fun(stmt) = method {
@@ -355,6 +384,13 @@ impl StmtVisitor<LoxObject> for Interpreter {
             }
         }
         let class = LoxClass::new(stmt.name.lexeme.clone(), superclass, methods);
+
+        if let Some(superinit) = *stmt.superclass.clone() {
+            if let Some(enclosing) = self.environment.enclosing.clone() {
+                self.environment = *enclosing;
+            }
+        }
+
         self.environment
             .assign(stmt.name.lexeme, LoxObject::Class(class));
         Ok(LoxObject::None)

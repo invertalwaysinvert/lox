@@ -1,8 +1,8 @@
 use crate::{
     exceptions::ParserError,
     expr::{
-        BinaryExpr, CallExpr, Expr, GetExpr, GroupingExpr, LiteralExpr, LogicalExpr, ThisExpr,
-        UnaryExpr, VariableExpr,
+        BinaryExpr, CallExpr, Expr, GetExpr, GroupingExpr, LiteralExpr, LogicalExpr, SuperExpr,
+        ThisExpr, UnaryExpr, VariableExpr,
     },
     logger::error_token,
     stmt::{
@@ -414,6 +414,12 @@ impl Parser {
         }
         if self.match_token(vec![TokenType::Number, TokenType::String]) {
             return Ok(Expr::Literal(LiteralExpr::new(self.previous().literal)));
+        }
+        if self.match_token(vec![TokenType::Super]) {
+            let keyword = self.previous();
+            self.consume(TokenType::Dot, "Expect '.' after super")?;
+            let method = self.consume(TokenType::Identifier, "Expect superclass method name.")?;
+            return Ok(Expr::Super(SuperExpr::new(keyword, method)));
         }
         if self.match_token(vec![TokenType::This]) {
             return Ok(Expr::This(ThisExpr::new(self.previous())));

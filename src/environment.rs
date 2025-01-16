@@ -7,7 +7,7 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct Environment {
-    enclosing: Option<Box<Environment>>,
+    pub enclosing: Option<Box<Environment>>,
     pub values: HashMap<String, LoxObject>,
 }
 
