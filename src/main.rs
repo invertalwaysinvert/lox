@@ -37,7 +37,7 @@ fn run_prompt() {
         match io::stdin().read_line(&mut input) {
             Ok(0) => break,
             Ok(_) => {
-                dbg!(run(&input));
+                print!("{}", run(&input));
                 input.clear();
             }
             Err(_) => exit(74), // Input/output error

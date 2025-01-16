@@ -158,8 +158,11 @@ impl ExprVisitor<LoxObject> for Interpreter {
         let right = self.evaluate_expr(*expr.right);
 
         match expr.operator.token_type {
-            // Todo: Negate the bang
-            TokenType::Bang => self.is_truthy(right),
+            TokenType::Bang => match self.is_truthy(right) {
+                LoxObject::Bool(true) => LoxObject::Bool(false),
+                LoxObject::Bool(false) => LoxObject::Bool(true),
+                _ => panic!("Not possible"),
+            },
             TokenType::Minus => match right {
                 LoxObject::Number(n) => LoxObject::Number(-1.0 * n),
                 _ => panic!(),

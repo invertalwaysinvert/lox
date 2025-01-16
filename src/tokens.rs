@@ -129,7 +129,7 @@ impl Div for LoxObject {
 impl Display for LoxObject {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LoxObject::None => write!(f, ""),
+            LoxObject::None => write!(f, "nil"),
             LoxObject::Bool(x) => write!(f, "{}", x),
             LoxObject::Number(x) => write!(f, "{}", x),
             LoxObject::String(x) => write!(f, "{}", x),
