@@ -27,9 +27,8 @@ impl Parser {
         while !self.is_at_end() {
             match self.declaration() {
                 Ok(stmt) => result.push(stmt),
-                Err(e) => {
-                    if let Some(token) = self.tokens.get(self.current) {
-                        println!("----\nLine {}\n{}\n\n", token, e.msg);
+                Err(_) => {
+                    if let Some(_token) = self.tokens.get(self.current) {
                         self.synchronize();
                     }
                 }

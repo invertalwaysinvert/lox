@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Write},
+};
 
 use crate::{
     callable::{LoxCallable, LoxFunction},
@@ -61,7 +64,7 @@ impl LoxCallable for LoxClass {
         instance
     }
 
-    fn arity(&self) -> u32 {
+    fn arity(&self) -> usize {
         if let Some(init) = self.find_methods("init") {
             init.arity()
         } else {

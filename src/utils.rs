@@ -1,4 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    fmt::Write,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use crate::{callable::LoxCallable, tokens::LoxObject};
 
@@ -6,7 +9,7 @@ use crate::{callable::LoxCallable, tokens::LoxObject};
 pub struct Clock {}
 
 impl LoxCallable for Clock {
-    fn arity(&self) -> u32 {
+    fn arity(&self) -> usize {
         0
     }
 

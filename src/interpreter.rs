@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Write};
 
 use crate::{
     callable::{LoxCallable, LoxFunction},
@@ -14,6 +14,7 @@ use crate::{
 pub struct Interpreter {
     pub environment: Environment,
     pub locals: HashMap<String, usize>,
+    pub output: String,
 }
 
 impl Interpreter {
@@ -22,6 +23,7 @@ impl Interpreter {
         Interpreter {
             environment: Environment::new_with_enclosing(globals),
             locals: HashMap::new(),
+            output: String::new(),
         }
     }
 
@@ -63,10 +65,11 @@ impl Interpreter {
             _ => LoxObject::Bool(true),
         }
     }
-    pub fn interpret(mut self, statements: Vec<Stmt>) {
+    pub fn interpret(mut self, statements: Vec<Stmt>) -> String {
         for statement in statements {
             let _ = self.execute_stmt(statement);
         }
+        self.output
     }
 
     pub fn resolve(&mut self, expr: Token, depth: usize) {
@@ -115,12 +118,6 @@ impl Interpreter {
             }
             None => self.environment.get(expr.name.to_string()).unwrap(),
         }
-    }
-}
-
-impl Default for Interpreter {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -210,7 +207,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
         }
 
         if let LoxObject::Callable(function) = callee {
-            if arguments.len() != function.arity() as usize {
+            if arguments.len() != function.arity() {
                 panic!("Unexpected number of arguments received");
             }
             function.call(self, arguments)
@@ -289,7 +286,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
     fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) -> Result<LoxObject, Return> {
         let value = self.evaluate_expr(stmt.expression);
-        println!("{}", value);
+        self.output.push_str(&format!("{}\n", value));
         Ok(LoxObject::None)
     }
 

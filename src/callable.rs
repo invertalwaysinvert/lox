@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt::Write};
 
 use crate::{
     environment::Environment, instance::LoxInstance, interpreter::Interpreter, stmt::FunStmt,
@@ -12,7 +12,7 @@ pub enum LoxCallableType {
 
 pub trait LoxCallable: std::fmt::Debug {
     fn call(&self, interpreter: &mut Interpreter, arguments: Vec<LoxObject>) -> LoxObject;
-    fn arity(&self) -> u32;
+    fn arity(&self) -> usize;
     fn to_string(&self) -> String;
 }
 
@@ -49,6 +49,10 @@ impl LoxFunction {
         environment.define("This this ".to_string(), LoxObject::Instance(instance));
         LoxFunction::new(self.declaration.clone(), environment, self.is_init)
     }
+
+    pub fn arity(&self) -> usize {
+        self.declaration.params.len()
+    }
 }
 
 impl LoxCallable for LoxFunction {
@@ -80,8 +84,8 @@ impl LoxCallable for LoxFunction {
         value
     }
 
-    fn arity(&self) -> u32 {
-        self.declaration.params.len() as u32
+    fn arity(&self) -> usize {
+        self.arity()
     }
 
     fn to_string(&self) -> String {

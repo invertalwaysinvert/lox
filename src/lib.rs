@@ -15,7 +15,7 @@ pub mod utils;
 
 use crate::resolver::Resolver;
 
-pub fn run(source: &str) {
+pub fn run(source: &str) -> String {
     let mut obj = scanner::Scanner::new(source);
     let result = obj.scan_tokens();
     // dbg!(&result);
@@ -25,5 +25,5 @@ pub fn run(source: &str) {
     let mut intr = interpreter::Interpreter::new();
     let mut resolver = Resolver::new(&mut intr);
     resolver.resolve_statements(statements.clone());
-    intr.interpret(statements);
+    intr.interpret(statements)
 }

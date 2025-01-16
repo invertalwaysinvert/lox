@@ -1,5 +1,5 @@
-use std::io;
 use std::io::Write;
+use std::io::{self, BufWriter};
 use std::{env, fs, process::exit};
 
 use lox::run;
@@ -20,7 +20,10 @@ fn main() {
 
 fn run_file(file_path: &str) {
     match fs::read_to_string(file_path) {
-        Ok(source) => run(&source),
+        Ok(source) => {
+            print!("{}", run(&source));
+            ()
+        }
         Err(_) => exit(65), // Data-format error
     }
 }

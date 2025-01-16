@@ -71,4 +71,3 @@ class Cake < Bread {
 
 Cake().bacon();
 
-print super.uu;
