@@ -385,7 +385,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
         }
         let class = LoxClass::new(stmt.name.lexeme.clone(), superclass, methods);
 
-        if let Some(superinit) = *stmt.superclass.clone() {
+        if let Some(_superinit) = *stmt.superclass.clone() {
             if let Some(enclosing) = self.environment.enclosing.clone() {
                 self.environment = *enclosing;
             }

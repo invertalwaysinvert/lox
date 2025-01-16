@@ -275,7 +275,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
 
         self.end_scope();
 
-        if let Some(superclass) = *stmt.superclass {
+        if let Some(_superclass) = *stmt.superclass {
             self.end_scope();
         }
 

@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use crate::{
     exceptions::Return,
-    expr::{Expr, VariableExpr},
+    expr::{Expr},
     tokens::Token,
 };
 
