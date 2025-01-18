@@ -1,7 +1,4 @@
-use std::{
-    fmt::Write,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::{callable::LoxCallable, tokens::LoxObject};
 
