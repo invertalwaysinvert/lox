@@ -95,7 +95,10 @@ impl Interpreter {
                 break;
             }
         }
-        self.environment = previous;
+        match self.environment.enclosing.clone() {
+            Some(x) => self.environment = *x,
+            None => panic!("Should always have enclosing env"),
+        }
         response
     }
 

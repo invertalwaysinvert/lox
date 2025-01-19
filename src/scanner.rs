@@ -34,6 +34,7 @@ impl<'a> Scanner<'a> {
             lexeme: "".to_string(),
             literal: LoxObject::None,
             line: self.line,
+            current: self.current,
         });
         self.tokens.clone()
     }
@@ -250,6 +251,7 @@ impl<'a> Scanner<'a> {
             lexeme,
             literal: LoxObject::None,
             line: self.line,
+            current: self.current,
         })
     }
 
@@ -265,6 +267,7 @@ impl<'a> Scanner<'a> {
             lexeme,
             literal,
             line: self.line,
+            current: self.current,
         })
     }
 

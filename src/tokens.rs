@@ -12,15 +12,23 @@ pub struct Token {
     pub lexeme: String,
     pub literal: LoxObject,
     pub line: usize,
+    pub current: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: LoxObject, line: usize) -> Self {
+    pub fn new(
+        token_type: TokenType,
+        lexeme: String,
+        literal: LoxObject,
+        line: usize,
+        current: usize,
+    ) -> Self {
         Token {
             token_type,
             lexeme,
             literal,
             line,
+            current,
         }
     }
 }
@@ -29,8 +37,8 @@ impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{} {:?} {} {}",
-            self.line, self.token_type, self.lexeme, self.literal
+            "{} {} {:?} {} {}",
+            self.line, self.current, self.token_type, self.lexeme, self.literal
         )
     }
 }
