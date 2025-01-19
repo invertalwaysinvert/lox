@@ -69,15 +69,16 @@ impl LoxCallable for LoxFunction {
                 arguments.get(i as usize).unwrap().clone(),
             )
         }
-        let value = match interpreter.execute_block(self.declaration.body.clone(), environment) {
-            Ok(_) => LoxObject::None,
-            Err(x) => {
-                if self.is_init {
-                    return self.closure.get("This this ".to_string()).unwrap();
+        let value =
+            match interpreter.execute_block(self.declaration.body.clone(), Some(environment)) {
+                Ok(_) => LoxObject::None,
+                Err(x) => {
+                    if self.is_init {
+                        return self.closure.get("This this ".to_string()).unwrap();
+                    }
+                    x.value
                 }
-                x.value
-            }
-        };
+            };
         if self.is_init {
             return self.closure.get("This this ".to_string()).unwrap();
         }

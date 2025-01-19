@@ -12,6 +12,7 @@ use crate::{
 
 #[derive(Clone)]
 pub struct Interpreter {
+    pub globals: Environment,
     pub environment: Environment,
     pub locals: HashMap<String, usize>,
     pub output: String,
@@ -21,6 +22,7 @@ impl Interpreter {
     pub fn new() -> Self {
         let globals = Environment::new();
         Interpreter {
+            globals: globals.clone(),
             environment: Environment::new_with_enclosing(globals),
             locals: HashMap::new(),
             output: String::new(),
@@ -79,10 +81,13 @@ impl Interpreter {
     pub fn execute_block(
         &mut self,
         statements: Vec<Stmt>,
-        environment: Environment,
+        environment: Option<Environment>,
     ) -> Result<(), Return> {
         let previous = self.environment.clone();
-        self.environment = environment;
+        match environment.clone() {
+            Some(env) => self.environment = Environment::new_with_enclosing(env),
+            None => self.environment = Environment::new_with_enclosing(self.environment.clone()),
+        };
         let mut response = Ok(());
         for stmt in statements {
             if let Err(x) = self.execute_stmt(stmt) {
@@ -95,7 +100,7 @@ impl Interpreter {
     }
 
     fn lookup_variable(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
-        match self.locals.get(&expr.to_string()) {
+        match self.locals.get(&expr.name.to_string()) {
             Some(x) => {
                 self.environment.get_at(*x, expr.name.lexeme)
                 // self
@@ -134,9 +139,12 @@ impl ExprVisitor<LoxObject> for Interpreter {
     fn visit_assign_expr(&mut self, expr: crate::expr::AssignExpr) -> LoxObject {
         let value = self.evaluate_expr(*expr.value.clone());
 
-        if let Some(distance) = self.locals.get(&expr.to_string()) {
-            self.environment
-                .assign_at(*distance, expr.name, value.clone())
+        match self.locals.get(&expr.name.to_string()) {
+            Some(distance) => {
+                self.environment
+                    .assign_at(*distance, expr.name.lexeme, value.clone())
+            }
+            None => self.environment.assign(expr.name.lexeme, value.clone()),
         }
 
         value
@@ -248,7 +256,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_super_expr(&mut self, expr: crate::expr::SuperExpr) -> LoxObject {
-        if let Some(distance) = self.locals.get(&expr.keyword.lexeme) {
+        if let Some(distance) = self.locals.get(&expr.keyword.to_string()) {
             let superclass = self
                 .environment
                 .get_at(*distance, "Super super ".to_string());
@@ -290,6 +298,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
     fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) -> Result<LoxObject, Return> {
         let value = self.evaluate_expr(stmt.expression);
         self.output.push_str(&format!("{}\n", value));
+        println!("{}", value);
         Ok(LoxObject::None)
     }
 
@@ -304,7 +313,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) -> Result<LoxObject, Return> {
-        self.execute_block(stmt.statements, self.environment.clone())?;
+        self.execute_block(stmt.statements, None)?;
         // TODO: Cloning the environment here is leading to weird behaviour where assign values to
         // variables inside a while block is not being reflected outside it
         Ok(LoxObject::None)

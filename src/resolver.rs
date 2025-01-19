@@ -39,18 +39,15 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn begin_scope(&mut self) {
+    pub fn begin_scope(&mut self) {
         self.scopes.push(HashMap::new());
     }
 
-    fn end_scope(&mut self) {
+    pub fn end_scope(&mut self) {
         self.scopes.pop();
     }
 
     fn declare(&mut self, name: &Token) {
-        if self.scopes.is_empty() {
-            return;
-        }
         if let Some(innermost) = self.scopes.last_mut() {
             innermost.insert(name.lexeme.clone(), false);
         }
@@ -66,8 +63,8 @@ impl<'a> Resolver<'a> {
     }
 
     fn resolve_local(&mut self, name: Token) {
-        for (i, scope) in self.scopes.clone().into_iter().rev().enumerate() {
-            if scope.contains_key(&name.to_string()) {
+        for (i, scope) in self.scopes.clone().into_iter().enumerate().rev() {
+            if scope.contains_key(&name.lexeme) {
                 self.interpreter.resolve(name, self.scopes.len() - 1 - i);
                 return;
             };
@@ -75,6 +72,7 @@ impl<'a> Resolver<'a> {
     }
 
     fn evaluate_expr(&mut self, expr: Expr) {
+        // dbg!(&expr);
         match expr {
             Expr::Binary(x) => self.resolve_expr(x),
             Expr::Grouping(x) => self.resolve_expr(x),
@@ -252,14 +250,14 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
             self.scopes
                 .last_mut()
                 .unwrap()
-                .insert("Super super ".to_string(), true);
+                .insert("super".to_string(), true);
         }
 
         self.begin_scope();
         self.scopes
             .last_mut()
             .unwrap()
-            .insert("This this ".to_string(), true);
+            .insert("this".to_string(), true);
 
         for method in stmt.methods {
             if let Stmt::Fun(stmt) = method {
@@ -288,7 +286,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
 impl<'a> ExprVisitor<()> for Resolver<'a> {
     fn visit_variable_expr(&mut self, expr: crate::expr::VariableExpr) {
         if let Some(innermost) = self.scopes.last() {
-            if let Some(false) = innermost.get(&expr.name.lexeme) {
+            if let Some(false) = innermost.get(&expr.name.to_string()) {
                 panic!("Can't read local variable in it's own initializer");
             }
         }

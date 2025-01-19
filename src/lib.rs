@@ -25,6 +25,10 @@ pub fn run(source: &str) -> String {
     // dbg!(&statements);
     let mut intr = interpreter::Interpreter::new();
     let mut resolver = Resolver::new(&mut intr);
+    // TODO: Recheck these
+    resolver.begin_scope();
     resolver.resolve_statements(statements.clone());
+    resolver.end_scope();
+    dbg!(&intr.locals);
     intr.interpret(statements)
 }
