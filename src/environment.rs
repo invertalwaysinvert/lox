@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     exceptions::RuntimeError,
-    tokens::{LoxObject, Token},
+    tokens::{LoxObject},
 };
 
 #[derive(Clone, Debug)]

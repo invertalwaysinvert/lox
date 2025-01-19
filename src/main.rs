@@ -1,5 +1,5 @@
 use std::io::Write;
-use std::io::{self, BufWriter};
+use std::io::{self};
 use std::{env, fs, process::exit};
 
 use lox::run;

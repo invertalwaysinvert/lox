@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt::Write};
+use std::{cmp::Ordering};
 
 use crate::{
     environment::Environment, instance::LoxInstance, interpreter::Interpreter, stmt::FunStmt,

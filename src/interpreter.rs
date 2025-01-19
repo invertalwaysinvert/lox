@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Write};
+use std::{collections::HashMap};
 
 use crate::{
     callable::{LoxCallable, LoxFunction},
@@ -83,7 +83,7 @@ impl Interpreter {
         statements: Vec<Stmt>,
         environment: Option<Environment>,
     ) -> Result<(), Return> {
-        let previous = self.environment.clone();
+        let _previous = self.environment.clone();
         match environment.clone() {
             Some(env) => self.environment = Environment::new_with_enclosing(env),
             None => self.environment = Environment::new_with_enclosing(self.environment.clone()),
