@@ -1,4 +1,4 @@
-use std::{cmp::Ordering};
+use std::cmp::Ordering;
 
 use crate::{
     environment::Environment, instance::LoxInstance, interpreter::Interpreter, stmt::FunStmt,
@@ -46,7 +46,7 @@ impl LoxFunction {
 
     pub fn bind(&self, instance: LoxInstance) -> Self {
         let mut environment = Environment::new_with_enclosing(self.closure.clone());
-        environment.define("This this ".to_string(), LoxObject::Instance(instance));
+        environment.define("this".to_string(), LoxObject::Instance(instance));
         LoxFunction::new(self.declaration.clone(), environment, self.is_init)
     }
 
@@ -74,13 +74,13 @@ impl LoxCallable for LoxFunction {
                 Ok(_) => LoxObject::None,
                 Err(x) => {
                     if self.is_init {
-                        return self.closure.get("This this ".to_string()).unwrap();
+                        return self.closure.get("this".to_string()).unwrap();
                     }
                     x.value
                 }
             };
         if self.is_init {
-            return self.closure.get("This this ".to_string()).unwrap();
+            return self.closure.get("this".to_string()).unwrap();
         }
         value
     }

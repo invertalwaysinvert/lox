@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{
     expr::{Expr, ExprVisitor, ExprVisitorAcceptor},
@@ -111,7 +111,10 @@ impl<'a> Resolver<'a> {
             self.declare(&param);
             self.define(&param);
         }
+        // Extra scope needed here as execute block opens up a new scope
+        self.begin_scope();
         self.resolve_statements(function.body);
+        self.end_scope();
         self.end_scope();
         self.current_function = enclosing_function;
     }

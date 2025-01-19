@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{
     callable::{LoxCallable, LoxFunction},
@@ -104,27 +104,15 @@ impl Interpreter {
 
     fn lookup_variable(&mut self, expr: crate::expr::VariableExpr) -> LoxObject {
         match self.locals.get(&expr.name.to_string()) {
-            Some(x) => {
-                self.environment.get_at(*x, expr.name.lexeme)
-                // self
-                //             .environment
-                //             .get(expr.name.lexeme.clone())
-                //             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
-            }
+            Some(x) => self.environment.get_at(*x, expr.name.lexeme),
             None => self.environment.get(expr.name.lexeme).unwrap(),
         }
     }
 
     fn lookup_this(&mut self, expr: crate::expr::ThisExpr) -> LoxObject {
         match self.locals.get(&expr.name.to_string()) {
-            Some(x) => {
-                self.environment.get_at(*x, expr.name.to_string())
-                // self
-                //             .environment
-                //             .get(expr.name.lexeme.clone())
-                //             .unwrap_or_else(|_| panic!("Undefined variable found: {}", &expr.name.lexeme))
-            }
-            None => self.environment.get(expr.name.to_string()).unwrap(),
+            Some(x) => self.environment.get_at(*x, "this".to_string()),
+            None => self.environment.get("this".to_string()).unwrap(),
         }
     }
 }
@@ -260,13 +248,9 @@ impl ExprVisitor<LoxObject> for Interpreter {
 
     fn visit_super_expr(&mut self, expr: crate::expr::SuperExpr) -> LoxObject {
         if let Some(distance) = self.locals.get(&expr.keyword.to_string()) {
-            let superclass = self
-                .environment
-                .get_at(*distance, "Super super ".to_string());
+            let superclass = self.environment.get_at(*distance, "super".to_string());
 
-            let object = self
-                .environment
-                .get_at(distance - 1, "This this ".to_string());
+            let object = self.environment.get_at(distance - 1, "this".to_string());
             if let LoxObject::Class(func) = superclass {
                 if let Some(method) = func.find_methods(&expr.method.lexeme) {
                     if let LoxObject::Instance(instance) = object {
@@ -317,8 +301,6 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
     fn visit_block_stmt(&mut self, stmt: crate::stmt::BlockStmt) -> Result<LoxObject, Return> {
         self.execute_block(stmt.statements, None)?;
-        // TODO: Cloning the environment here is leading to weird behaviour where assign values to
-        // variables inside a while block is not being reflected outside it
         Ok(LoxObject::None)
     }
 
@@ -379,8 +361,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
         if let Some(superinit) = *stmt.superclass.clone() {
             let super_exp = self.evaluate_expr(superinit);
             self.environment = Environment::new_with_enclosing(self.environment.clone());
-            self.environment
-                .define("Super super ".to_string(), super_exp);
+            self.environment.define("super".to_string(), super_exp);
         }
         let mut methods = HashMap::new();
         for method in stmt.methods {
