@@ -1,9 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
-use crate::{
-    exceptions::RuntimeError,
-    tokens::{LoxObject},
-};
+use crate::{exceptions::RuntimeError, tokens::LoxObject};
 
 #[derive(Clone, Debug)]
 pub struct Environment {
@@ -76,5 +73,23 @@ impl Environment {
             }
         }
         result
+    }
+}
+
+impl Display for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Keys: {:?} Value: {:?} --- Enclosing: {}",
+            self.values.keys(),
+            self.values.values(),
+            *self.enclosing.clone().unwrap()
+        )
+    }
+}
+
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
     }
 }

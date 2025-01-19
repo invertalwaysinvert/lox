@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    fmt::{Display, Write},
-};
+use std::{collections::HashMap, fmt::Display};
 
 use crate::{
     callable::{LoxCallable, LoxFunction},

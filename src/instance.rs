@@ -20,11 +20,8 @@ impl LoxInstance {
     }
 
     pub fn get(&self, name: Token) -> LoxObject {
-        match self.fields.get(&name.lexeme) {
-            Some(x) => {
-                return x.clone();
-            }
-            None => (),
+        if let Some(x) = self.fields.get(&name.lexeme) {
+            return x.clone();
         };
 
         if let Some(method) = self.class.find_methods(&name.lexeme) {

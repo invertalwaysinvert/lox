@@ -112,9 +112,7 @@ impl<'a> Resolver<'a> {
             self.define(&param);
         }
         // Extra scope needed here as execute block opens up a new scope
-        self.begin_scope();
         self.resolve_statements(function.body);
-        self.end_scope();
         self.end_scope();
         self.current_function = enclosing_function;
     }
@@ -268,7 +266,9 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
                 if stmt.name.lexeme.eq("init") {
                     declaration = FunctionType::Init;
                 }
-                self.resolve_function(stmt, declaration)
+                self.begin_scope();
+                self.resolve_function(stmt, declaration);
+                self.end_scope();
             } else {
                 panic!("Invalid method found!")
             }

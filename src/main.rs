@@ -22,7 +22,6 @@ fn run_file(file_path: &str) {
     match fs::read_to_string(file_path) {
         Ok(source) => {
             print!("{}", run(&source));
-            ()
         }
         Err(_) => exit(65), // Data-format error
     }

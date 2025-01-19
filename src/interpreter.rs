@@ -83,9 +83,8 @@ impl Interpreter {
         statements: Vec<Stmt>,
         environment: Option<Environment>,
     ) -> Result<(), Return> {
-        let _previous = self.environment.clone();
         match environment.clone() {
-            Some(env) => self.environment = Environment::new_with_enclosing(env),
+            Some(env) => self.environment = Environment::new_with_enclosing(env.clone()),
             None => self.environment = Environment::new_with_enclosing(self.environment.clone()),
         };
         let mut response = Ok(());
@@ -96,7 +95,8 @@ impl Interpreter {
             }
         }
         match self.environment.enclosing.clone() {
-            Some(x) => self.environment = *x,
+            Some(x) => self.environment = *x, // TODO: We possible forget state here after binding
+            // to a closure function which has an isolated environment as closure
             None => panic!("Should always have enclosing env"),
         }
         response
@@ -201,7 +201,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
     }
 
     fn visit_call_expr(&mut self, expr: crate::expr::CallExpr) -> LoxObject {
-        let callee = self.evaluate_expr(*expr.callee);
+        let callee = self.evaluate_expr(*expr.callee.clone());
 
         let mut arguments = Vec::new();
         for argument in expr.arguments {
