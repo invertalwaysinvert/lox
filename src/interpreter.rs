@@ -83,7 +83,7 @@ impl Interpreter {
         statements: Vec<Stmt>,
         environment: Option<Environment>,
     ) -> Result<(), Return> {
-        match environment.clone() {
+        match &environment {
             Some(env) => self.environment = Environment::new_with_enclosing(env.clone()),
             None => self.environment = Environment::new_with_enclosing(self.environment.clone()),
         };
@@ -94,11 +94,32 @@ impl Interpreter {
                 break;
             }
         }
-        match self.environment.enclosing.clone() {
-            Some(x) => self.environment = *x, // TODO: We possible forget state here after binding
+        match self.environment.clone().enclosing {
+            Some(x) => {
+                let env = x.borrow();
+                self.environment = env.clone();
+            } // TODO: We possible forget state here after binding
             // to a closure function which has an isolated environment as closure
             None => panic!("Should always have enclosing env"),
         }
+        response
+    }
+
+    pub fn execute_fun(
+        &mut self,
+        statements: Vec<Stmt>,
+        environment: Environment,
+    ) -> Result<(), Return> {
+        let previous = self.environment.clone();
+        self.environment = environment;
+        let mut response = Ok(());
+        for stmt in statements {
+            if let Err(x) = self.execute_stmt(stmt) {
+                response = Err(x);
+                break;
+            }
+        }
+        self.environment = previous;
         response
     }
 
@@ -380,7 +401,8 @@ impl StmtVisitor<LoxObject> for Interpreter {
 
         if let Some(_superinit) = *stmt.superclass.clone() {
             if let Some(enclosing) = self.environment.enclosing.clone() {
-                self.environment = *enclosing;
+                let env = enclosing.borrow();
+                self.environment = env.clone();
             }
         }
 
