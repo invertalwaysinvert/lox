@@ -72,7 +72,6 @@ impl<'a> Resolver<'a> {
     }
 
     fn evaluate_expr(&mut self, expr: Expr) {
-        // dbg!(&expr);
         match expr {
             Expr::Binary(x) => self.resolve_expr(x),
             Expr::Grouping(x) => self.resolve_expr(x),
