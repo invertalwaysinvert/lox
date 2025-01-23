@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{cell::RefCell, collections::HashMap, fmt::Display, rc::Rc};
 
 use crate::{
     class::LoxClass,
@@ -8,26 +8,26 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct LoxInstance {
     pub class: LoxClass,
-    pub fields: HashMap<String, LoxObject>,
+    pub fields: Rc<RefCell<HashMap<String, LoxObject>>>,
 }
 
 impl LoxInstance {
     pub fn new(class: LoxClass) -> Self {
         LoxInstance {
             class,
-            fields: HashMap::new(),
+            fields: Rc::new(RefCell::new(HashMap::new())),
         }
     }
 
     pub fn get(&self, name: Token) -> LoxObject {
-        if let Some(x) = self.fields.get(&name.lexeme) {
+        let fields = self.fields.borrow();
+        if let Some(x) = fields.get(&name.lexeme) {
             return x.clone();
         };
 
         if let Some(method) = self.class.find_methods(&name.lexeme) {
-            let method = method.bind(self.clone()); // TODO: Should not be cloning here, methods are now
-                                                    // unattached from the instances
-            let method = LoxObject::Callable(Box::new(method));
+            let method = method.bind(self.clone());
+            let method = LoxObject::FunCall(Box::new(method));
             return method;
         }
 
@@ -35,7 +35,8 @@ impl LoxInstance {
     }
 
     pub fn set(&mut self, name: Token, value: LoxObject) {
-        self.fields.insert(name.lexeme, value);
+        let mut fields = self.fields.borrow_mut();
+        fields.insert(name.lexeme, value);
     }
 }
 

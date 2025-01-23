@@ -49,7 +49,7 @@ pub enum LoxObject {
     Number(f32),
     Bool(bool),
     None,
-    Callable(Box<LoxFunction>),
+    FunCall(Box<LoxFunction>),
     Class(LoxClass),
     Instance(LoxInstance),
 }
@@ -60,7 +60,7 @@ impl PartialOrd for LoxObject {
             (Self::String(l), Self::String(r)) => l.partial_cmp(r),
             (Self::Number(l), Self::Number(r)) => l.partial_cmp(r),
             (Self::Bool(l), Self::Bool(r)) => l.partial_cmp(r),
-            (Self::Callable(_), Self::Callable(_)) => None,
+            (Self::FunCall(_), Self::FunCall(_)) => None,
             (Self::None, Self::None) => Some(Ordering::Equal),
             (Self::None, _) => Some(Ordering::Less),
             (_, Self::None) => Some(Ordering::Greater),
@@ -75,7 +75,7 @@ impl PartialEq for LoxObject {
             (Self::String(l0), Self::String(r0)) => l0 == r0,
             (Self::Number(l0), Self::Number(r0)) => l0 == r0,
             (Self::Bool(l0), Self::Bool(r0)) => l0 == r0,
-            (Self::Callable(_l0), Self::Callable(_r0)) => false,
+            (Self::FunCall(_l0), Self::FunCall(_r0)) => false,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
@@ -88,7 +88,7 @@ impl Clone for LoxObject {
             Self::Number(x) => LoxObject::Number(*x),
             Self::Bool(x) => LoxObject::Bool(*x),
             Self::None => LoxObject::None,
-            Self::Callable(x) => LoxObject::Callable(Box::new(*x.clone())),
+            Self::FunCall(x) => LoxObject::FunCall(Box::new(*x.clone())),
             Self::Class(x) => LoxObject::Class(x.clone()),
             Self::Instance(x) => LoxObject::Instance(x.clone()),
         }
@@ -145,7 +145,7 @@ impl Display for LoxObject {
             LoxObject::Bool(x) => write!(f, "{}", x),
             LoxObject::Number(x) => write!(f, "{}", x),
             LoxObject::String(x) => write!(f, "{}", x),
-            LoxObject::Callable(_x) => write!(f, "<loxFunction>"),
+            LoxObject::FunCall(_x) => write!(f, "<loxFunction>"),
             LoxObject::Class(x) => write!(f, "<loxClass {}>", x.name),
             LoxObject::Instance(x) => write!(f, "<loxInstance {}>", x.class.name),
         }

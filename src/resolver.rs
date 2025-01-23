@@ -266,9 +266,7 @@ impl<'a> StmtVisitor<()> for Resolver<'a> {
                 if stmt.name.lexeme.eq("init") {
                     declaration = FunctionType::Init;
                 }
-                self.begin_scope();
                 self.resolve_function(stmt, declaration);
-                self.end_scope();
             } else {
                 panic!("Invalid method found!")
             }

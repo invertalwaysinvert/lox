@@ -98,8 +98,7 @@ impl Interpreter {
             Some(x) => {
                 let env = x.borrow();
                 self.environment = env.clone();
-            } // TODO: We possible forget state here after binding
-            // to a closure function which has an isolated environment as closure
+            }
             None => panic!("Should always have enclosing env"),
         }
         response
@@ -229,7 +228,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
             arguments.push(self.evaluate_expr(argument));
         }
 
-        if let LoxObject::Callable(function) = callee {
+        if let LoxObject::FunCall(function) = callee {
             if arguments.len() != function.arity() {
                 panic!("Unexpected number of arguments received");
             }
@@ -275,7 +274,7 @@ impl ExprVisitor<LoxObject> for Interpreter {
             if let LoxObject::Class(func) = superclass {
                 if let Some(method) = func.find_methods(&expr.method.lexeme) {
                     if let LoxObject::Instance(instance) = object {
-                        return LoxObject::Callable(Box::new(method.bind(instance)));
+                        return LoxObject::FunCall(Box::new(method.bind(instance)));
                     }
                 } else {
                     panic!("Undefined property '{}'", expr.keyword.lexeme);
@@ -356,7 +355,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
         let fun_name = stmt.name.lexeme.clone();
         let function = LoxFunction::new(stmt, self.environment.clone(), false);
         self.environment
-            .define(fun_name, LoxObject::Callable(Box::new(function)));
+            .define(fun_name, LoxObject::FunCall(Box::new(function)));
         Ok(LoxObject::None)
     }
 
