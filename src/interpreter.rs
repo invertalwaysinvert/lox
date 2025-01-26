@@ -305,7 +305,7 @@ impl StmtVisitor<LoxObject> for Interpreter {
     fn visit_print_stmt(&mut self, stmt: crate::stmt::PrintStmt) -> Result<LoxObject, Return> {
         let value = self.evaluate_expr(stmt.expression);
         self.output.push_str(&format!("{}\n", value));
-        // println!("{}", value);
+        println!("{}", value);
         Ok(LoxObject::None)
     }
 

@@ -28,5 +28,6 @@ pub fn run(source: &str) -> String {
     resolver.begin_scope();
     resolver.resolve_statements(statements.clone());
     resolver.end_scope();
+    // dbg!(&intr.locals);
     intr.interpret(statements)
 }
